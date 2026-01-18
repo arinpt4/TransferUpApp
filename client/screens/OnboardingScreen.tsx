@@ -61,8 +61,10 @@ export default function OnboardingScreen({ onComplete }: OnboardingScreenProps) 
   const handleNext = async () => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     if (currentIndex < slides.length - 1) {
+      const nextIndex = currentIndex + 1;
+      setCurrentIndex(nextIndex);
       flatListRef.current?.scrollToIndex({
-        index: currentIndex + 1,
+        index: nextIndex,
         animated: true,
       });
     } else {

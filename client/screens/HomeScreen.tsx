@@ -171,7 +171,7 @@ export default function HomeScreen() {
             theme={theme}
           />
           <QuickActionCard
-            icon="calculator"
+            icon="percent"
             label="GPA Calc"
             color="#7C3AED"
             onPress={() => (navigation as any).navigate("ProfileTab")}
