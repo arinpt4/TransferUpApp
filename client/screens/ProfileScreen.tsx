@@ -1,26 +1,515 @@
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import React, { useState, useEffect, useCallback } from "react";
+import {
+  StyleSheet,
+  View,
+  TextInput,
+  Pressable,
+  Modal,
+  Switch,
+  Platform,
+} from "react-native";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useNavigation } from "@react-navigation/native";
+import { Feather } from "@expo/vector-icons";
+import * as Haptics from "expo-haptics";
+import Animated, { FadeInDown } from "react-native-reanimated";
 
 import { KeyboardAwareScrollViewCompat } from "@/components/KeyboardAwareScrollViewCompat";
+import { ThemedText } from "@/components/ThemedText";
+import { ThemedView } from "@/components/ThemedView";
+import { Card } from "@/components/Card";
+import { Button } from "@/components/Button";
 import { useTheme } from "@/hooks/useTheme";
-import { Spacing } from "@/constants/theme";
+import { Spacing, BorderRadius } from "@/constants/theme";
+import {
+  getUserProfile,
+  saveUserProfile,
+  getCourses,
+  clearAllData,
+  setOnboardingComplete,
+  type UserProfile,
+  type Course,
+} from "@/lib/storage";
 
 export default function ProfileScreen() {
-  const insets = useSafeAreaInsets();
   const headerHeight = useHeaderHeight();
   const tabBarHeight = useBottomTabBarHeight();
-  const { theme } = useTheme();
+  const insets = useSafeAreaInsets();
+  const navigation = useNavigation();
+  const { theme, isDark } = useTheme();
+
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showGpaModal, setShowGpaModal] = useState(false);
+  const [editName, setEditName] = useState("");
+  const [gpaInput, setGpaInput] = useState("");
+
+  const loadData = useCallback(async () => {
+    const [userProfile, userCourses] = await Promise.all([
+      getUserProfile(),
+      getCourses(),
+    ]);
+    setProfile(userProfile);
+    setCourses(userCourses);
+    if (userProfile?.name) {
+      setEditName(userProfile.name);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener("focus", loadData);
+    return unsubscribe;
+  }, [navigation, loadData]);
+
+  const saveProfile = async () => {
+    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    const updatedProfile: UserProfile = {
+      name: editName,
+      communityCollegeId: profile?.communityCollegeId || null,
+      communityCollegeName: profile?.communityCollegeName || null,
+      targetUniversityIds: profile?.targetUniversityIds || [],
+      gpa: profile?.gpa || null,
+    };
+    await saveUserProfile(updatedProfile);
+    setProfile(updatedProfile);
+    setShowEditModal(false);
+  };
+
+  const saveGpa = async () => {
+    const gpa = parseFloat(gpaInput);
+    if (isNaN(gpa) || gpa < 0 || gpa > 4) {
+      return;
+    }
+    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    const updatedProfile: UserProfile = {
+      ...profile!,
+      gpa,
+    };
+    await saveUserProfile(updatedProfile);
+    setProfile(updatedProfile);
+    setShowGpaModal(false);
+  };
+
+  const handleClearData = async () => {
+    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+    await clearAllData();
+    await setOnboardingComplete(false);
+    setProfile(null);
+    setCourses([]);
+  };
+
+  const completedCourses = courses.filter((c) => c.completed);
+  const totalUnits = courses.reduce((sum, c) => sum + c.units, 0);
+  const completedUnits = completedCourses.reduce((sum, c) => sum + c.units, 0);
 
   return (
     <KeyboardAwareScrollViewCompat
       style={{ flex: 1, backgroundColor: theme.backgroundRoot }}
       contentContainerStyle={{
         paddingTop: headerHeight + Spacing.xl,
-        paddingBottom: tabBarHeight + Spacing.xl,
+        paddingBottom: tabBarHeight + Spacing["2xl"],
         paddingHorizontal: Spacing.lg,
       }}
       scrollIndicatorInsets={{ bottom: insets.bottom }}
-    />
+    >
+      <Animated.View entering={FadeInDown.delay(0).duration(400)}>
+        <View style={styles.profileHeader}>
+          <View
+            style={[styles.avatar, { backgroundColor: theme.backgroundSecondary }]}
+          >
+            <Feather name="user" size={32} color={theme.primary} />
+          </View>
+          <View style={styles.profileInfo}>
+            <ThemedText type="h2">{profile?.name || "Student"}</ThemedText>
+            <ThemedText
+              type="small"
+              style={{ color: theme.textSecondary, marginTop: 2 }}
+            >
+              {profile?.communityCollegeName || "No school selected"}
+            </ThemedText>
+          </View>
+          <Pressable
+            onPress={() => setShowEditModal(true)}
+            style={[styles.editButton, { backgroundColor: theme.backgroundSecondary }]}
+          >
+            <Feather name="edit-2" size={18} color={theme.text} />
+          </Pressable>
+        </View>
+      </Animated.View>
+
+      <Animated.View entering={FadeInDown.delay(100).duration(400)}>
+        <View style={styles.statsGrid}>
+          <View
+            style={[styles.statCard, { backgroundColor: theme.backgroundDefault }]}
+          >
+            <ThemedText type="h2" style={{ color: theme.primary }}>
+              {profile?.gpa?.toFixed(2) || "--"}
+            </ThemedText>
+            <ThemedText type="small" style={{ color: theme.textSecondary }}>
+              Current GPA
+            </ThemedText>
+          </View>
+          <View
+            style={[styles.statCard, { backgroundColor: theme.backgroundDefault }]}
+          >
+            <ThemedText type="h2" style={{ color: theme.success }}>
+              {completedUnits}
+            </ThemedText>
+            <ThemedText type="small" style={{ color: theme.textSecondary }}>
+              Units Done
+            </ThemedText>
+          </View>
+          <View
+            style={[styles.statCard, { backgroundColor: theme.backgroundDefault }]}
+          >
+            <ThemedText type="h2" style={{ color: theme.secondary }}>
+              {courses.length}
+            </ThemedText>
+            <ThemedText type="small" style={{ color: theme.textSecondary }}>
+              Total Courses
+            </ThemedText>
+          </View>
+        </View>
+      </Animated.View>
+
+      <Animated.View entering={FadeInDown.delay(200).duration(400)}>
+        <ThemedText type="h3" style={styles.sectionTitle}>
+          Quick Tools
+        </ThemedText>
+
+        <Card
+          elevation={1}
+          style={[styles.toolCard, { borderColor: theme.border }]}
+          onPress={() => {
+            setGpaInput(profile?.gpa?.toString() || "");
+            setShowGpaModal(true);
+          }}
+        >
+          <View style={styles.toolContent}>
+            <View
+              style={[styles.toolIcon, { backgroundColor: `${theme.primary}15` }]}
+            >
+              <Feather name="percent" size={22} color={theme.primary} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <ThemedText type="h4">GPA Calculator</ThemedText>
+              <ThemedText
+                type="small"
+                style={{ color: theme.textSecondary, marginTop: 2 }}
+              >
+                Track and calculate your GPA
+              </ThemedText>
+            </View>
+            <Feather name="chevron-right" size={20} color={theme.textSecondary} />
+          </View>
+        </Card>
+
+        <Card
+          elevation={1}
+          style={[styles.toolCard, { borderColor: theme.border }]}
+          onPress={() => (navigation as any).navigate("SchoolsTab")}
+        >
+          <View style={styles.toolContent}>
+            <View
+              style={[styles.toolIcon, { backgroundColor: `${theme.secondary}15` }]}
+            >
+              <Feather name="book-open" size={22} color={theme.secondary} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <ThemedText type="h4">Manage Schools</ThemedText>
+              <ThemedText
+                type="small"
+                style={{ color: theme.textSecondary, marginTop: 2 }}
+              >
+                Update your CC and target universities
+              </ThemedText>
+            </View>
+            <Feather name="chevron-right" size={20} color={theme.textSecondary} />
+          </View>
+        </Card>
+      </Animated.View>
+
+      <Animated.View entering={FadeInDown.delay(300).duration(400)}>
+        <ThemedText type="h3" style={styles.sectionTitle}>
+          Settings
+        </ThemedText>
+
+        <View
+          style={[styles.settingRow, { backgroundColor: theme.backgroundDefault }]}
+        >
+          <View style={styles.settingContent}>
+            <Feather name="moon" size={20} color={theme.text} />
+            <ThemedText type="body" style={{ marginLeft: Spacing.md }}>
+              Dark Mode
+            </ThemedText>
+          </View>
+          <Switch
+            value={isDark}
+            disabled
+            trackColor={{ false: theme.backgroundTertiary, true: theme.primary }}
+            thumbColor="#FFFFFF"
+          />
+        </View>
+
+        <View
+          style={[styles.settingRow, { backgroundColor: theme.backgroundDefault }]}
+        >
+          <View style={styles.settingContent}>
+            <Feather name="bell" size={20} color={theme.text} />
+            <ThemedText type="body" style={{ marginLeft: Spacing.md }}>
+              Notifications
+            </ThemedText>
+          </View>
+          <Switch
+            value={true}
+            trackColor={{ false: theme.backgroundTertiary, true: theme.primary }}
+            thumbColor="#FFFFFF"
+          />
+        </View>
+      </Animated.View>
+
+      <Animated.View entering={FadeInDown.delay(400).duration(400)}>
+        <ThemedText type="h3" style={styles.sectionTitle}>
+          Data
+        </ThemedText>
+
+        <Pressable
+          onPress={handleClearData}
+          style={({ pressed }) => [
+            styles.dangerButton,
+            {
+              backgroundColor: `${theme.error}15`,
+              opacity: pressed ? 0.7 : 1,
+            },
+          ]}
+        >
+          <Feather name="trash-2" size={20} color={theme.error} />
+          <ThemedText type="body" style={{ color: theme.error, marginLeft: Spacing.md }}>
+            Clear All Data
+          </ThemedText>
+        </Pressable>
+
+        <ThemedText
+          type="small"
+          style={[styles.footerText, { color: theme.textSecondary }]}
+        >
+          Transfer Pathway Optimizer v1.0.0
+        </ThemedText>
+      </Animated.View>
+
+      <Modal
+        visible={showEditModal}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setShowEditModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <ThemedView style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <ThemedText type="h3">Edit Profile</ThemedText>
+              <Pressable onPress={() => setShowEditModal(false)} hitSlop={12}>
+                <Feather name="x" size={24} color={theme.text} />
+              </Pressable>
+            </View>
+
+            <View style={styles.inputGroup}>
+              <ThemedText type="small" style={styles.label}>
+                Your Name
+              </ThemedText>
+              <TextInput
+                style={[
+                  styles.input,
+                  {
+                    backgroundColor: theme.backgroundSecondary,
+                    color: theme.text,
+                    borderColor: theme.border,
+                  },
+                ]}
+                placeholder="Enter your name"
+                placeholderTextColor={theme.textSecondary}
+                value={editName}
+                onChangeText={setEditName}
+              />
+            </View>
+
+            <Button onPress={saveProfile} style={{ marginTop: Spacing.lg }}>
+              Save Changes
+            </Button>
+          </ThemedView>
+        </View>
+      </Modal>
+
+      <Modal
+        visible={showGpaModal}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setShowGpaModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <ThemedView style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <ThemedText type="h3">Update GPA</ThemedText>
+              <Pressable onPress={() => setShowGpaModal(false)} hitSlop={12}>
+                <Feather name="x" size={24} color={theme.text} />
+              </Pressable>
+            </View>
+
+            <ThemedText
+              type="body"
+              style={{ color: theme.textSecondary, marginBottom: Spacing.lg }}
+            >
+              Enter your current cumulative GPA (0.00 - 4.00)
+            </ThemedText>
+
+            <View style={styles.inputGroup}>
+              <TextInput
+                style={[
+                  styles.input,
+                  styles.gpaInput,
+                  {
+                    backgroundColor: theme.backgroundSecondary,
+                    color: theme.text,
+                    borderColor: theme.border,
+                  },
+                ]}
+                placeholder="3.50"
+                placeholderTextColor={theme.textSecondary}
+                value={gpaInput}
+                onChangeText={setGpaInput}
+                keyboardType="decimal-pad"
+                maxLength={4}
+              />
+            </View>
+
+            <Button onPress={saveGpa} style={{ marginTop: Spacing.lg }}>
+              Save GPA
+            </Button>
+          </ThemedView>
+        </View>
+      </Modal>
+    </KeyboardAwareScrollViewCompat>
   );
 }
+
+const styles = StyleSheet.create({
+  profileHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: Spacing["2xl"],
+  },
+  avatar: {
+    width: 64,
+    height: 64,
+    borderRadius: BorderRadius.full,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  profileInfo: {
+    flex: 1,
+    marginLeft: Spacing.lg,
+  },
+  editButton: {
+    width: 40,
+    height: 40,
+    borderRadius: BorderRadius.full,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  statsGrid: {
+    flexDirection: "row",
+    gap: Spacing.sm,
+    marginBottom: Spacing["2xl"],
+  },
+  statCard: {
+    flex: 1,
+    alignItems: "center",
+    paddingVertical: Spacing.lg,
+    borderRadius: BorderRadius.md,
+  },
+  sectionTitle: {
+    marginBottom: Spacing.md,
+    marginTop: Spacing.md,
+  },
+  toolCard: {
+    marginBottom: Spacing.sm,
+    borderWidth: 1,
+  },
+  toolContent: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  toolIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: BorderRadius.md,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: Spacing.md,
+  },
+  settingRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: Spacing.lg,
+    borderRadius: BorderRadius.md,
+    marginBottom: Spacing.sm,
+  },
+  settingContent: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  dangerButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: Spacing.lg,
+    borderRadius: BorderRadius.md,
+  },
+  footerText: {
+    textAlign: "center",
+    marginTop: Spacing["3xl"],
+    marginBottom: Spacing.lg,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "flex-end",
+  },
+  modalContent: {
+    borderTopLeftRadius: BorderRadius["2xl"],
+    borderTopRightRadius: BorderRadius["2xl"],
+    padding: Spacing.xl,
+    paddingBottom: Spacing["4xl"],
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: Spacing.xl,
+  },
+  inputGroup: {
+    marginBottom: Spacing.md,
+  },
+  label: {
+    marginBottom: Spacing.xs,
+    fontWeight: "500",
+  },
+  input: {
+    height: Spacing.inputHeight,
+    borderRadius: BorderRadius.sm,
+    paddingHorizontal: Spacing.md,
+    fontSize: 16,
+    borderWidth: 1,
+  },
+  gpaInput: {
+    fontSize: 24,
+    fontWeight: "600",
+    textAlign: "center",
+  },
+});
