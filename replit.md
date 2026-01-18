@@ -23,12 +23,22 @@ Preferred communication style: Simple, everyday language.
 ### Navigation Structure
 The app uses a 5-tab bottom navigation pattern:
 1. **Home** - Dashboard with progress overview
-2. **Schools** - University selection and comparison
+2. **Schools** - University selection, transfer requirements, and ASSIST.org integration
 3. **Roadmap** - Semester-by-semester course planning
 4. **Alerts** - Warnings and deadline notifications
 5. **Profile** - Settings and GPA calculator
 
 Each tab contains its own stack navigator for hierarchical navigation. A root stack navigator handles the onboarding flow as a modal.
+
+### Transfer Requirements Feature
+The app integrates with ASSIST.org to show official transfer requirements:
+1. User selects their community college (CC) on the Schools tab
+2. User selects target universities (UC/CSU)
+3. "View Transfer Requirements" button appears below each target university
+4. Tapping opens TransferRequirementsScreen showing available majors from ASSIST.org
+5. Selecting a major loads course requirements parsed from the articulation agreement
+6. Users can select courses and add them directly to their roadmap by semester
+7. Added courses show an "In Roadmap" badge to prevent duplicates
 
 ### Backend Architecture
 - **Framework**: Express.js v5 running on Node.js
@@ -50,9 +60,14 @@ Each tab contains its own stack navigator for hierarchical navigation. A root st
 
 ### Third-Party APIs
 - **ASSIST.org API** (`https://assist.org/api`): California's official transfer articulation system
-  - `/api/institutions` - Fetches all community colleges and universities
-  - `/api/agreements` - Gets articulation agreements between schools
-  - `/api/articulation` - Gets specific course equivalencies
+  - `/api/institutions` - Fetches all 100+ California community colleges and universities
+  - `/api/agreements?sendingInstitutionId=X&receivingInstitutionId=Y&academicYearId=74` - Gets list of majors/programs with articulation agreements
+  - `/api/articulation/Agreements?Key=...` - Gets detailed course requirements for a specific major
+  
+### Backend API Endpoints
+- `GET /api/institutions` - Proxies ASSIST.org institutions, transforms to normalized format
+- `GET /api/agreements` - Proxies ASSIST.org agreements endpoint for majors list
+- `GET /api/articulation?key=...` - Fetches and parses articulation data, extracting courses with code, title, units, and department
 
 ### Database
 - **PostgreSQL**: Configured via `DATABASE_URL` environment variable

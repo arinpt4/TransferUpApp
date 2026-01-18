@@ -10,6 +10,8 @@ import {
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import Animated, { FadeInDown } from "react-native-reanimated";
@@ -18,6 +20,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { SchoolCard, CompactSchoolCard } from "@/components/SchoolCard";
 import { EmptyState } from "@/components/EmptyState";
 import { SkeletonCard } from "@/components/SkeletonLoader";
+import { Button } from "@/components/Button";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius } from "@/constants/theme";
 import { getApiUrl } from "@/lib/query-client";
@@ -29,13 +32,16 @@ import {
   type Institution,
   type UserProfile,
 } from "@/lib/storage";
+import type { SchoolsStackParamList } from "@/navigation/SchoolsStackNavigator";
 
 type FilterType = "all" | "CC" | "CSU" | "UC";
+type SchoolsNavigationProp = NativeStackNavigationProp<SchoolsStackParamList, "Schools">;
 
 export default function SchoolsScreen() {
   const headerHeight = useHeaderHeight();
   const tabBarHeight = useBottomTabBarHeight();
   const insets = useSafeAreaInsets();
+  const navigation = useNavigation<SchoolsNavigationProp>();
   const { theme, isDark } = useTheme();
 
   const [institutions, setInstitutions] = useState<Institution[]>([]);
@@ -215,13 +221,44 @@ export default function SchoolsScreen() {
               </ThemedText>
             </View>
             {selectedUnis.map((uni) => (
-              <SchoolCard
-                key={uni.id}
-                institution={uni}
-                selected
-                onRemove={() => toggleTargetUniversity(uni)}
-                showRemove
-              />
+              <View key={uni.id}>
+                <SchoolCard
+                  institution={uni}
+                  selected
+                  onRemove={() => toggleTargetUniversity(uni)}
+                  showRemove
+                />
+                {selectedCC ? (
+                  <Pressable
+                    onPress={() => {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                      navigation.navigate("TransferRequirements", {
+                        sendingId: selectedCC.id,
+                        sendingName: selectedCC.name,
+                        receivingId: uni.id,
+                        receivingName: uni.name,
+                      });
+                    }}
+                    style={({ pressed }) => [
+                      styles.viewRequirementsButton,
+                      {
+                        backgroundColor: `${theme.primary}15`,
+                        borderColor: theme.primary,
+                        opacity: pressed ? 0.7 : 1,
+                      },
+                    ]}
+                  >
+                    <Feather name="file-text" size={16} color={theme.primary} />
+                    <ThemedText
+                      type="body"
+                      style={{ color: theme.primary, marginLeft: Spacing.sm, fontWeight: "600" }}
+                    >
+                      View Transfer Requirements
+                    </ThemedText>
+                    <Feather name="chevron-right" size={18} color={theme.primary} style={{ marginLeft: "auto" }} />
+                  </Pressable>
+                ) : null}
+              </View>
             ))}
           </Animated.View>
         ) : null}
@@ -389,5 +426,14 @@ const styles = StyleSheet.create({
   },
   subsectionTitle: {
     marginBottom: Spacing.sm,
+  },
+  viewRequirementsButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: Spacing.md,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    marginTop: Spacing.xs,
+    marginBottom: Spacing.md,
   },
 });

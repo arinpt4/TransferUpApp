@@ -3,6 +3,28 @@ import { createServer, type Server } from "node:http";
 
 const ASSIST_API_BASE = "https://assist.org/api";
 
+interface ArticulationCourse {
+  courseIdentifierParentId: number;
+  courseTitle: string;
+  courseNumber: string;
+  prefix: string;
+  prefixParentId: number;
+  prefixDescription: string;
+  departmentParentId: number;
+  department: string;
+  begin: string;
+  end: string | null;
+  minUnits: number;
+  maxUnits: number;
+}
+
+interface ArticulationRequirement {
+  type: string;
+  courses?: ArticulationCourse[];
+  conjunction?: string;
+  position?: number;
+}
+
 interface AssistInstitution {
   id: number;
   code: string;
@@ -91,23 +113,107 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/articulation/:key", async (req, res) => {
+  app.get("/api/articulation", async (req, res) => {
     try {
-      const { key } = req.params;
+      const { key } = req.query;
 
-      const response = await fetch(`${ASSIST_API_BASE}/articulation/${key}`);
+      if (!key) {
+        return res.status(400).json({ error: "key parameter is required" });
+      }
+
+      const response = await fetch(
+        `${ASSIST_API_BASE}/articulation/Agreements?Key=${encodeURIComponent(key as string)}`
+      );
 
       if (!response.ok) {
         throw new Error(`ASSIST API error: ${response.status}`);
       }
 
       const data = await response.json();
-      res.json(data);
+      
+      const parsedCourses = parseArticulationData(data);
+      
+      res.json({
+        raw: data,
+        courses: parsedCourses,
+      });
     } catch (error) {
       console.error("Error fetching articulation:", error);
       res.status(500).json({ error: "Failed to fetch articulation details" });
     }
   });
+
+  function parseArticulationData(data: any): any[] {
+    const courses: any[] = [];
+    
+    try {
+      const result = data?.result;
+      if (!result) return courses;
+
+      const templateAssets = result.templateAssets;
+      if (!templateAssets) return courses;
+
+      let assets: any[];
+      if (typeof templateAssets === "string") {
+        assets = JSON.parse(templateAssets);
+      } else {
+        assets = templateAssets;
+      }
+
+      for (const asset of assets) {
+        if (asset.type === "RequirementGroup" && asset.sections) {
+          for (const section of asset.sections) {
+            if (section.rows) {
+              for (const row of section.rows) {
+                if (row.cells) {
+                  for (const cell of row.cells) {
+                    if (cell.type === "Course" && cell.course) {
+                      const course = cell.course;
+                      if (course.courseTitle && course.courseNumber) {
+                        courses.push({
+                          id: `${course.prefix || ""}${course.courseNumber}`,
+                          code: `${course.prefix || ""} ${course.courseNumber}`.trim(),
+                          title: course.courseTitle,
+                          units: course.maxUnits || course.minUnits || 3,
+                          department: course.department || course.prefixDescription || "",
+                          transferable: true,
+                          source: "ASSIST",
+                        });
+                      }
+                    }
+                    if (cell.courses && Array.isArray(cell.courses)) {
+                      for (const course of cell.courses) {
+                        if (course.courseTitle && course.courseNumber) {
+                          courses.push({
+                            id: `${course.prefix || ""}${course.courseNumber}`,
+                            code: `${course.prefix || ""} ${course.courseNumber}`.trim(),
+                            title: course.courseTitle,
+                            units: course.maxUnits || course.minUnits || 3,
+                            department: course.department || course.prefixDescription || "",
+                            transferable: true,
+                            source: "ASSIST",
+                          });
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.error("Error parsing articulation data:", e);
+    }
+
+    const uniqueCourses = courses.filter(
+      (course, index, self) =>
+        index === self.findIndex((c) => c.code === course.code)
+    );
+
+    return uniqueCourses;
+  }
 
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok", timestamp: new Date().toISOString() });

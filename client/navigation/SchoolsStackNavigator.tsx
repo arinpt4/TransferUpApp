@@ -2,10 +2,17 @@ import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
 import SchoolsScreen from "@/screens/SchoolsScreen";
+import TransferRequirementsScreen from "@/screens/TransferRequirementsScreen";
 import { useScreenOptions } from "@/hooks/useScreenOptions";
 
 export type SchoolsStackParamList = {
   Schools: undefined;
+  TransferRequirements: {
+    sendingId: number;
+    sendingName: string;
+    receivingId: number;
+    receivingName: string;
+  };
 };
 
 const Stack = createNativeStackNavigator<SchoolsStackParamList>();
@@ -20,6 +27,13 @@ export default function SchoolsStackNavigator() {
         component={SchoolsScreen}
         options={{
           title: "Schools",
+        }}
+      />
+      <Stack.Screen
+        name="TransferRequirements"
+        component={TransferRequirementsScreen}
+        options={{
+          title: "Transfer Requirements",
         }}
       />
     </Stack.Navigator>
