@@ -1,0 +1,108 @@
+Build a mobile-first Transfer Pathway Optimizer app for the Replit Mobile Buildathon. This must be a native-feeling mobile application that uses the ASSIST.org API for California community college transfer data.
+Mobile App Requirements:
+
+Mobile-Native Interface:
+
+Design for iOS/Android mobile screens (responsive, touch-friendly)
+Bottom navigation bar for main sections
+Swipeable course cards
+Pull-to-refresh for updating data
+Native-feeling animations and transitions
+Mobile-optimized forms with proper input types
+
+
+App Structure (Tab Navigation):
+
+Home Tab: Quick overview, progress toward transfer
+Schools Tab: Select and compare target universities
+Roadmap Tab: Semester-by-semester course plan
+Alerts Tab: Warnings, deadlines, course conflicts
+Profile Tab: Settings, saved data, GPA calculator
+
+
+ASSIST.org API Integration:
+
+API base URL: https://api.assist.org
+Key endpoints:
+
+GET /api/institutions - fetch all CCs and UCs/CSUs
+GET /api/agreements - get articulation agreements
+GET /api/articulation - get course equivalencies
+
+
+Implement proper error handling and offline support
+Cache responses for better mobile performance
+
+
+Core Mobile Features:
+
+Onboarding flow (first-time user setup)
+Swipe gestures for navigating semesters
+Toggle switches for completed courses
+Push-style notifications for course alerts
+Bottom sheet modals for course details
+Sticky headers while scrolling
+Pull-to-refresh on school/course lists
+
+
+Course Roadmap (Mobile-Optimized):
+
+Horizontal scroll through semesters
+Tap course cards to see details (modal/bottom sheet)
+Long-press to mark as completed
+Progress bars showing completion %
+Color-coded course categories with legend
+Unit counter badge on each semester
+
+
+Alert System:
+
+Badge notifications on Alerts tab
+In-app warnings when selecting non-transferable courses
+Red warning banners for critical issues
+Dismissible alert cards
+
+
+Mobile-Specific Bonus Features:
+
+Dark mode toggle
+Haptic feedback on important actions
+Share roadmap via native share sheet
+Add courses to calendar (exportable)
+Quick GPA calculator accessible from bottom nav
+
+
+
+Technical Stack for Mobile:
+
+Framework: React Native or React with mobile-first design
+Styling: Tailwind CSS with mobile breakpoints OR React Native styling
+Navigation: React Navigation (if React Native) or mobile-optimized routing
+Storage: AsyncStorage (React Native) or localStorage
+API handling: Fetch with proper mobile network handling
+
+UI/UX Priorities:
+
+Touch targets minimum 44x44px
+Large, readable fonts (minimum 16px body text)
+Thumb-friendly bottom navigation
+Fast load times (skeleton screens while loading)
+Smooth 60fps animations
+Works well on screens as small as iPhone SE
+
+Mobile Performance:
+
+Lazy load course data
+Virtualized lists for long course lists
+Compress/cache ASSIST API responses
+Optimize images and assets
+Fast initial load time
+
+Submission Requirements:
+
+Must work on mobile browsers or as PWA
+Demonstrate mobile-specific features
+Smooth, native-feeling experience
+Clear value for CC transfer students
+
+Build this as a complete, polished mobile app that I can demo on my phone for the competition. Focus on mobile UX first, desktop can be secondary.
