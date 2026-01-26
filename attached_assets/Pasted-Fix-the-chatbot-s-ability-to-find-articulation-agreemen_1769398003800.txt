@@ -1,0 +1,39 @@
+Fix the chatbot's ability to find articulation agreements for ANY college combination:
+
+1. Update the get_institutions function to accept a search parameter:
+   - Function should be: "search_institutions" 
+   - Parameters: {"query": "string - name of the school to search for"}
+   - When GPT asks about "De Anza" or "UC Berkeley" or ANY school, it should call this function
+   - Return matching institutions with their codes and names
+
+2. When a user asks about transferring from College A to College B:
+   - First, GPT should call search_institutions for College A
+   - Then call search_institutions for College B  
+   - Then call get_agreements with the correct institution codes
+   - Handle cases where multiple schools match (ask user to clarify)
+
+3. Update get_agreements to return the FULL list of majors with their agreement keys
+
+4. When searching for a major (like "EECS"):
+   - GPT should search through ALL returned majors using case-insensitive partial matching
+   - If multiple matches found, present options to user
+   - If no exact match, show closest matches and ask user to pick
+   - Common variations to check:
+     * "Computer Science" vs "CS" vs "CompSci"
+     * "EECS" vs "Electrical Engineering and Computer Sciences"
+     * "Business Administration" vs "Business" vs "Bus Admin"
+
+5. Add fuzzy matching logic:
+   - If user says "EECS", match any major containing "EECS", "Electrical Engineering", or "Computer Sci"
+   - Use .toLowerCase() and .includes() for matching
+   - Score matches and present top 3 if no exact match
+
+6. Error handling:
+   - If search_institutions returns no results: "I couldn't find a school named [X]. Can you provide the full name?"
+   - If get_agreements returns empty: "There don't appear to be articulation agreements between [A] and [B]. This might mean: (1) The schools don't have formal agreements, (2) Try checking ASSIST.org directly, or (3) One of the school names might be slightly different."
+   - If major not found: "I found [N] majors between these schools, but none matching [major name]. Here are some options: [list top 5]"
+
+7. Update the system prompt to include:
+   "Always search for institutions by name first before trying to get agreements. School codes are internal - users will give you school names. Be flexible with major names since they vary across institutions."
+
+DO NOT hardcode any specific college names or codes. The chatbot must work for ANY California community college to ANY CSU/UC combination.
