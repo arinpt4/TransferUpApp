@@ -1,0 +1,41 @@
+Replace the Alerts tab with a Transfer Advisor Chatbot with these exact specifications:
+
+1. Rename the tab from "Alerts" to "Advisor" 
+2. Change the tab icon to a message bubble or chat icon (use Ionicons)
+3. Create a chat interface with:
+   - Messages displayed in a FlatList (user messages right-aligned in amber, bot messages left-aligned in gray)
+   - Fixed input bar at bottom with text input and send button
+   - Auto-scroll to bottom when new messages appear
+   - Typing indicator when bot is responding
+
+4. Integrate with OpenAI GPT API:
+   - Use the Chat Completions API endpoint: https://api.openai.com/v1/chat/completions
+   - Model: gpt-4o
+   - Store API key in environment variable OPENAI_API_KEY
+   - Create a new backend endpoint: POST /api/chat
+
+5. The chatbot system prompt should be:
+   "You are a helpful transfer advisor for California community college students. You have access to the ASSIST.org articulation database. Help students understand transfer requirements, plan their courses, and answer questions about UC/CSU transfers. Be encouraging and concise."
+
+6. Give the chatbot access to call these backend functions as tools/function calling:
+   - Function name: "get_institutions" - calls GET /api/institutions (to look up schools)
+   - Function name: "get_agreements" - calls GET /api/agreements (to find available majors between two schools, requires fromInstitutionCode and toInstitutionCode)
+   - Function name: "get_articulation" - calls GET /api/articulation (to get course requirements, requires agreement key)
+
+7. Implement OpenAI function calling properly:
+   - Define the three functions in the API request's "tools" parameter
+   - When GPT responds with a function call, execute the corresponding backend API endpoint
+   - Send the function result back to GPT in the next message
+   - Continue until GPT provides a final text response
+
+8. Store chat history in AsyncStorage with key "chatHistory" (array of {role, content} objects)
+9. Add a "Clear Chat" button in the header
+10. Show a welcome message on first load: "Hi! I'm your transfer advisor. Ask me anything about transferring from your community college to a UC or CSU."
+
+Use the existing app theme colors. DO NOT modify the other tabs or navigation structure.
+
+Backend implementation notes:
+- The /api/chat endpoint should accept {message: string, history: array}
+- Maintain conversation history in the request to OpenAI
+- Handle function calling loop server-side
+- Return the final assistant message to the frontend
