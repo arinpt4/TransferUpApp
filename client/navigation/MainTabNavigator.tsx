@@ -105,9 +105,9 @@ export default function MainTabNavigator() {
         name="AlertsTab"
         component={AlertsStackNavigator}
         options={{
-          title: "Alerts",
+          title: "Advisor",
           tabBarIcon: ({ color, size }) => (
-            <Feather name="bell" size={size} color={color} />
+            <Feather name="message-circle" size={size} color={color} />
           ),
         }}
       />

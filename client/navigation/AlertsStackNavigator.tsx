@@ -1,11 +1,11 @@
 import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
-import AlertsScreen from "@/screens/AlertsScreen";
+import AdvisorScreen from "@/screens/AdvisorScreen";
 import { useScreenOptions } from "@/hooks/useScreenOptions";
 
 export type AlertsStackParamList = {
-  Alerts: undefined;
+  Advisor: undefined;
 };
 
 const Stack = createNativeStackNavigator<AlertsStackParamList>();
@@ -16,10 +16,10 @@ export default function AlertsStackNavigator() {
   return (
     <Stack.Navigator screenOptions={screenOptions}>
       <Stack.Screen
-        name="Alerts"
-        component={AlertsScreen}
+        name="Advisor"
+        component={AdvisorScreen}
         options={{
-          title: "Alerts",
+          title: "Transfer Advisor",
         }}
       />
     </Stack.Navigator>

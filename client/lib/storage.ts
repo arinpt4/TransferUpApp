@@ -11,6 +11,7 @@ const STORAGE_KEYS = {
   ROADMAP_MODE: "roadmapMode",
   ALERTS: "alerts",
   CACHED_INSTITUTIONS: "cached_institutions",
+  CHAT_HISTORY: "chatHistory",
 } as const;
 
 export type RoadmapMode = "semester" | "quarter";
@@ -178,6 +179,28 @@ export async function saveCachedInstitutions(institutions: Institution[]): Promi
     STORAGE_KEYS.CACHED_INSTITUTIONS,
     JSON.stringify(institutions)
   );
+}
+
+export interface ChatMessage {
+  role: "user" | "assistant";
+  content: string;
+}
+
+export async function getChatHistory(): Promise<ChatMessage[]> {
+  try {
+    const value = await AsyncStorage.getItem(STORAGE_KEYS.CHAT_HISTORY);
+    return value ? JSON.parse(value) : [];
+  } catch {
+    return [];
+  }
+}
+
+export async function saveChatHistory(messages: ChatMessage[]): Promise<void> {
+  await AsyncStorage.setItem(STORAGE_KEYS.CHAT_HISTORY, JSON.stringify(messages));
+}
+
+export async function clearChatHistory(): Promise<void> {
+  await AsyncStorage.removeItem(STORAGE_KEYS.CHAT_HISTORY);
 }
 
 export async function clearAllData(): Promise<void> {
