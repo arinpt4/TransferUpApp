@@ -28,9 +28,13 @@ import {
   getCourses,
   saveCourses,
   getSemesters,
+  getQuarters,
+  getRoadmapMode,
+  saveRoadmapMode,
   generateId,
   type Course,
   type Semester,
+  type RoadmapMode,
 } from "@/lib/storage";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -49,6 +53,7 @@ export default function RoadmapScreen() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showCourseModal, setShowCourseModal] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
+  const [roadmapMode, setRoadmapMode] = useState<RoadmapMode>("semester");
   const [newCourse, setNewCourse] = useState({
     code: "",
     title: "",
@@ -57,17 +62,31 @@ export default function RoadmapScreen() {
   });
 
   const loadData = useCallback(async () => {
-    const [loadedCourses, loadedSemesters] = await Promise.all([
+    const [loadedCourses, loadedMode] = await Promise.all([
       getCourses(),
-      getSemesters(),
+      getRoadmapMode(),
     ]);
     setCourses(loadedCourses);
-    setSemesters(loadedSemesters);
+    setRoadmapMode(loadedMode);
+    
+    const periods = loadedMode === "quarter" ? await getQuarters() : await getSemesters();
+    setSemesters(periods);
   }, []);
 
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  const handleModeChange = async (mode: RoadmapMode) => {
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setRoadmapMode(mode);
+    await saveRoadmapMode(mode);
+    
+    const periods = mode === "quarter" ? await getQuarters() : await getSemesters();
+    setSemesters(periods);
+    setCurrentSemesterIndex(0);
+    flatListRef.current?.scrollToIndex({ index: 0, animated: true });
+  };
 
   const toggleCourseComplete = async (courseId: string) => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -242,6 +261,51 @@ export default function RoadmapScreen() {
           },
         ]}
       >
+        <View style={styles.modeToggle}>
+          <Pressable
+            onPress={() => handleModeChange("semester")}
+            style={[
+              styles.modeButton,
+              {
+                backgroundColor: roadmapMode === "semester" ? theme.primary : "transparent",
+                borderColor: theme.primary,
+              },
+            ]}
+            testID="mode-semester"
+          >
+            <ThemedText
+              type="small"
+              style={{
+                color: roadmapMode === "semester" ? "#FFFFFF" : theme.primary,
+                fontWeight: "600",
+              }}
+            >
+              Semester
+            </ThemedText>
+          </Pressable>
+          <Pressable
+            onPress={() => handleModeChange("quarter")}
+            style={[
+              styles.modeButton,
+              {
+                backgroundColor: roadmapMode === "quarter" ? theme.primary : "transparent",
+                borderColor: theme.primary,
+              },
+            ]}
+            testID="mode-quarter"
+          >
+            <ThemedText
+              type="small"
+              style={{
+                color: roadmapMode === "quarter" ? "#FFFFFF" : theme.primary,
+                fontWeight: "600",
+              }}
+            >
+              Quarter
+            </ThemedText>
+          </Pressable>
+        </View>
+
         <View style={styles.progressHeader}>
           <ThemedText type="small" style={{ color: theme.textSecondary }}>
             Total Progress
@@ -568,6 +632,19 @@ const styles = StyleSheet.create({
   header: {
     paddingHorizontal: Spacing.lg,
     paddingBottom: Spacing.lg,
+  },
+  modeToggle: {
+    flexDirection: "row",
+    marginBottom: Spacing.md,
+    borderRadius: BorderRadius.md,
+    overflow: "hidden",
+  },
+  modeButton: {
+    flex: 1,
+    paddingVertical: Spacing.sm,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
   },
   progressHeader: {
     flexDirection: "row",

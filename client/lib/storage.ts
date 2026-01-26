@@ -7,9 +7,13 @@ const STORAGE_KEYS = {
   TARGET_UNIVERSITIES: "target_universities",
   COURSES: "courses",
   SEMESTERS: "semesters",
+  QUARTERS: "quarters",
+  ROADMAP_MODE: "roadmapMode",
   ALERTS: "alerts",
   CACHED_INSTITUTIONS: "cached_institutions",
 } as const;
+
+export type RoadmapMode = "semester" | "quarter";
 
 export interface UserProfile {
   name: string;
@@ -43,7 +47,7 @@ export interface Semester {
   id: string;
   name: string;
   year: number;
-  term: "Fall" | "Spring" | "Summer";
+  term: "Fall" | "Spring" | "Summer" | "Winter";
   order: number;
 }
 
@@ -116,6 +120,37 @@ export async function saveSemesters(semesters: Semester[]): Promise<void> {
   await AsyncStorage.setItem(STORAGE_KEYS.SEMESTERS, JSON.stringify(semesters));
 }
 
+export async function getQuarters(): Promise<Semester[]> {
+  try {
+    const value = await AsyncStorage.getItem(STORAGE_KEYS.QUARTERS);
+    if (value) {
+      return JSON.parse(value);
+    }
+    const defaultQuarters = generateDefaultQuarters();
+    await saveQuarters(defaultQuarters);
+    return defaultQuarters;
+  } catch {
+    return generateDefaultQuarters();
+  }
+}
+
+export async function saveQuarters(quarters: Semester[]): Promise<void> {
+  await AsyncStorage.setItem(STORAGE_KEYS.QUARTERS, JSON.stringify(quarters));
+}
+
+export async function getRoadmapMode(): Promise<RoadmapMode> {
+  try {
+    const value = await AsyncStorage.getItem(STORAGE_KEYS.ROADMAP_MODE);
+    return (value as RoadmapMode) || "semester";
+  } catch {
+    return "semester";
+  }
+}
+
+export async function saveRoadmapMode(mode: RoadmapMode): Promise<void> {
+  await AsyncStorage.setItem(STORAGE_KEYS.ROADMAP_MODE, mode);
+}
+
 export async function getAlerts(): Promise<Alert[]> {
   try {
     const value = await AsyncStorage.getItem(STORAGE_KEYS.ALERTS);
@@ -170,6 +205,34 @@ function generateDefaultSemesters(): Semester[] {
   }
   
   return semesters;
+}
+
+function generateDefaultQuarters(): Semester[] {
+  const currentDate = new Date();
+  const currentYear = currentDate.getFullYear();
+  const currentMonth = currentDate.getMonth();
+  
+  const startYear = currentMonth >= 9 ? currentYear : currentYear - 1;
+  const quarters: Semester[] = [];
+  const terms: Array<"Fall" | "Winter" | "Spring" | "Summer"> = ["Fall", "Winter", "Spring", "Summer"];
+  
+  let order = 0;
+  for (let yearOffset = 0; yearOffset < 2; yearOffset++) {
+    for (const term of terms) {
+      const quarterYear = term === "Fall" ? startYear + yearOffset : startYear + yearOffset + 1;
+      const academicYear = term === "Fall" ? startYear + yearOffset : startYear + yearOffset;
+      quarters.push({
+        id: `qtr-${order + 1}`,
+        name: `${term} ${quarterYear}`,
+        year: quarterYear,
+        term,
+        order,
+      });
+      order++;
+    }
+  }
+  
+  return quarters;
 }
 
 export function generateId(): string {
