@@ -7,6 +7,7 @@ import {
   Modal,
   Switch,
   Platform,
+  Alert,
 } from "react-native";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
@@ -97,12 +98,28 @@ export default function ProfileScreen() {
     setShowGpaModal(false);
   };
 
-  const handleClearData = async () => {
-    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-    await clearAllData();
-    await setOnboardingComplete(false);
-    setProfile(null);
-    setCourses([]);
+  const handleClearData = () => {
+    Alert.alert(
+      "Clear All Data",
+      "Are you sure you want to delete your data? This action cannot be undone.",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+            await clearAllData();
+            await setOnboardingComplete(false);
+            setProfile(null);
+            setCourses([]);
+          },
+        },
+      ]
+    );
   };
 
   const completedCourses = courses.filter((c) => c.completed);

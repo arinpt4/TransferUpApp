@@ -1,0 +1,49 @@
+Fix the following 7 issues in the app:
+
+1. REMOVE TOTAL PROGRESS FROM ROADMAP:
+   - Delete the "Total Progress" text/label from the Roadmap screen
+   - Delete the "0/3 units" display and progress dots
+   - Keep only: semester/quarter toggle, semester cards, and floating "+" button
+   - Adjust spacing so toggle is properly positioned below header
+
+2. FIX SEGMENTED CONTROL CLIPPING:
+   - The semester/quarter toggle buttons are clipping at the edges when unselected
+   - Remove overflow: 'hidden' from the segmented control container OR add proper padding
+   - Ensure both selected and unselected states show complete rounded borders
+   - Selected button: amber background with full rounded corners
+   - Unselected button: transparent/gray background with full visible borders
+
+3. FIX KEYBOARD COVERING ADD COURSE INPUT:
+   - Wrap the "Add Course" modal in KeyboardAvoidingView
+   - Use behavior="padding" for iOS, behavior="height" for Android
+   - Set keyboardVerticalOffset={100} (adjust as needed)
+   - Ensure users can see the input field, label, and save button when typing
+   - Test on both iOS and Android
+
+4. FIX SEMESTER/QUARTER CARD SCROLL ALIGNMENT:
+   - Cards are showing partial view of next card (misaligned)
+   - Set snapToInterval on ScrollView/FlatList to match exact card width
+   - Use snapToAlignment="start" and decelerationRate="fast"
+   - Card width should be: screenWidth - (2 × horizontalPadding)
+   - Each semester/quarter should take full screen width, no partial views
+
+5. CENTER TRASH ICON IN ADVISOR BUTTON:
+   - The trash icon in "Clear Chat" button is not centered
+   - Add alignItems: 'center' and justifyContent: 'center' to button container
+   - Remove any extra margin/padding from icon
+   - Icon should be perfectly centered both horizontally and vertically
+
+6. ADD CONFIRMATION DIALOG FOR CLEAR DATA:
+   - Before clearing data, show Alert.alert() with:
+     * Title: "Clear All Data"
+     * Message: "Are you sure you want to delete your data? This action cannot be undone."
+     * Buttons: "Cancel" (cancel style) and "Delete" (destructive style in red)
+   - Only clear data if user taps "Delete"
+
+7. FIX CLEAR ALL DATA TO DELETE ROADMAP:
+   - Currently clearing data doesn't remove roadmap courses
+   - Delete these AsyncStorage keys: chatHistory, roadmapMode, semesters, quarters, onboardingComplete, selectedCollege, targetUniversities, and any other user data
+   - Reset all app state after clearing
+   - Verify roadmap shows no courses, chat is empty, all progress reset
+
+Test all fixes on both iOS and Android. Make sure everything works together without breaking existing functionality.

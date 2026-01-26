@@ -8,6 +8,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
@@ -60,25 +61,38 @@ export default function AdvisorScreen() {
     loadHistory();
   }, [loadHistory]);
 
+  const handleClearChat = useCallback(() => {
+    Alert.alert(
+      "Clear Chat",
+      "Are you sure you want to clear the chat history?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Clear",
+          style: "destructive",
+          onPress: async () => {
+            await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+            await clearChatHistory();
+            setMessages([WELCOME_MESSAGE]);
+          },
+        },
+      ]
+    );
+  }, []);
+
   useEffect(() => {
     navigation.setOptions({
       headerRight: () => (
         <Pressable
           onPress={handleClearChat}
           hitSlop={12}
-          style={{ marginRight: Spacing.md }}
+          style={styles.headerButton}
         >
           <Feather name="trash-2" size={20} color={theme.text} />
         </Pressable>
       ),
     });
-  }, [navigation, theme]);
-
-  const handleClearChat = async () => {
-    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-    await clearChatHistory();
-    setMessages([WELCOME_MESSAGE]);
-  };
+  }, [navigation, theme, handleClearChat]);
 
   const scrollToBottom = () => {
     setTimeout(() => {
@@ -429,5 +443,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginLeft: Spacing.xs,
+  },
+  headerButton: {
+    width: 40,
+    height: 40,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: Spacing.xs,
   },
 });

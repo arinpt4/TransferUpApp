@@ -8,6 +8,8 @@ import {
   Modal,
   TextInput,
   ScrollView,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
@@ -261,13 +263,51 @@ export default function RoadmapScreen() {
           },
         ]}
       >
-        <View style={styles.progressHeader}>
-          <ThemedText type="small" style={{ color: theme.textSecondary }}>
-            Total Progress
-          </ThemedText>
-          <ThemedText type="h3" style={{ color: theme.primary }}>
-            {completedUnits}/{totalUnits} units
-          </ThemedText>
+        <View style={styles.modeToggle}>
+          <Pressable
+            onPress={() => handleModeChange("semester")}
+            style={[
+              styles.modeButton,
+              styles.modeButtonLeft,
+              {
+                backgroundColor: roadmapMode === "semester" ? theme.primary : "transparent",
+                borderColor: theme.primary,
+              },
+            ]}
+            testID="mode-semester"
+          >
+            <ThemedText
+              type="small"
+              style={{
+                color: roadmapMode === "semester" ? "#FFFFFF" : theme.primary,
+                fontWeight: "600",
+              }}
+            >
+              Semester
+            </ThemedText>
+          </Pressable>
+          <Pressable
+            onPress={() => handleModeChange("quarter")}
+            style={[
+              styles.modeButton,
+              styles.modeButtonRight,
+              {
+                backgroundColor: roadmapMode === "quarter" ? theme.primary : "transparent",
+                borderColor: theme.primary,
+              },
+            ]}
+            testID="mode-quarter"
+          >
+            <ThemedText
+              type="small"
+              style={{
+                color: roadmapMode === "quarter" ? "#FFFFFF" : theme.primary,
+                fontWeight: "600",
+              }}
+            >
+              Quarter
+            </ThemedText>
+          </Pressable>
         </View>
 
         <View style={styles.semesterDots}>
@@ -290,53 +330,6 @@ export default function RoadmapScreen() {
             />
           ))}
         </View>
-
-        <View style={styles.modeToggleContainer}>
-          <View style={styles.modeToggle}>
-            <Pressable
-              onPress={() => handleModeChange("semester")}
-              style={[
-                styles.modeButton,
-                {
-                  backgroundColor: roadmapMode === "semester" ? theme.primary : "transparent",
-                  borderColor: theme.primary,
-                },
-              ]}
-              testID="mode-semester"
-            >
-              <ThemedText
-                type="small"
-                style={{
-                  color: roadmapMode === "semester" ? "#FFFFFF" : theme.primary,
-                  fontWeight: "600",
-                }}
-              >
-                Semester
-              </ThemedText>
-            </Pressable>
-            <Pressable
-              onPress={() => handleModeChange("quarter")}
-              style={[
-                styles.modeButton,
-                {
-                  backgroundColor: roadmapMode === "quarter" ? theme.primary : "transparent",
-                  borderColor: theme.primary,
-                },
-              ]}
-              testID="mode-quarter"
-            >
-              <ThemedText
-                type="small"
-                style={{
-                  color: roadmapMode === "quarter" ? "#FFFFFF" : theme.primary,
-                  fontWeight: "600",
-                }}
-              >
-                Quarter
-              </ThemedText>
-            </Pressable>
-          </View>
-        </View>
       </View>
 
       {courses.length === 0 ? (
@@ -356,15 +349,14 @@ export default function RoadmapScreen() {
           renderItem={renderSemester}
           keyExtractor={(item) => item.id}
           horizontal
-          pagingEnabled
           showsHorizontalScrollIndicator={false}
-          snapToInterval={SEMESTER_WIDTH + Spacing.md}
+          snapToInterval={SEMESTER_WIDTH}
+          snapToAlignment="start"
           decelerationRate="fast"
           contentContainerStyle={{
             paddingHorizontal: Spacing.lg,
             paddingBottom: tabBarHeight + Spacing["6xl"],
           }}
-          ItemSeparatorComponent={() => <View style={{ width: Spacing.md }} />}
           onViewableItemsChanged={onViewableItemsChanged}
           viewabilityConfig={viewabilityConfig}
         />
@@ -386,7 +378,11 @@ export default function RoadmapScreen() {
         transparent
         onRequestClose={() => setShowAddModal(false)}
       >
-        <View style={styles.modalOverlay}>
+        <KeyboardAvoidingView
+          style={styles.modalOverlay}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
+        >
           <ThemedView style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <ThemedText type="h3">Add Course</ThemedText>
@@ -517,7 +513,7 @@ export default function RoadmapScreen() {
               Add Course
             </Button>
           </ThemedView>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
 
       <Modal
@@ -635,14 +631,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingBottom: Spacing.lg,
   },
-  modeToggleContainer: {
-    marginTop: Spacing.xl,
-    marginBottom: Spacing.md,
-  },
   modeToggle: {
     flexDirection: "row",
-    borderRadius: BorderRadius.md,
-    overflow: "hidden",
+    marginBottom: Spacing.lg,
   },
   modeButton: {
     flex: 1,
@@ -651,11 +642,14 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     borderWidth: 1,
   },
-  progressHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: Spacing.md,
+  modeButtonLeft: {
+    borderTopLeftRadius: BorderRadius.md,
+    borderBottomLeftRadius: BorderRadius.md,
+    borderRightWidth: 0,
+  },
+  modeButtonRight: {
+    borderTopRightRadius: BorderRadius.md,
+    borderBottomRightRadius: BorderRadius.md,
   },
   semesterDots: {
     flexDirection: "row",
