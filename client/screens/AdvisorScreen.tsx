@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import {
   StyleSheet,
   View,
@@ -16,6 +16,7 @@ import { useNavigation } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import Animated, { FadeInDown } from "react-native-reanimated";
+import Markdown from "react-native-markdown-display";
 
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
@@ -142,6 +143,85 @@ export default function AdvisorScreen() {
     }
   };
 
+  const markdownStyles = useMemo(() => ({
+    body: {
+      color: theme.text,
+      fontSize: 15,
+      lineHeight: 22,
+      fontFamily: "Nunito_400Regular",
+    },
+    strong: {
+      color: theme.amber,
+      fontFamily: "Nunito_700Bold",
+    },
+    em: {
+      fontFamily: "Nunito_400Regular",
+      fontStyle: "italic" as const,
+    },
+    heading1: {
+      color: theme.text,
+      fontSize: 20,
+      fontFamily: "Nunito_700Bold",
+      marginBottom: Spacing.sm,
+      marginTop: Spacing.md,
+    },
+    heading2: {
+      color: theme.text,
+      fontSize: 18,
+      fontFamily: "Nunito_700Bold",
+      marginBottom: Spacing.xs,
+      marginTop: Spacing.sm,
+    },
+    heading3: {
+      color: theme.text,
+      fontSize: 16,
+      fontFamily: "Nunito_600SemiBold",
+      marginBottom: Spacing.xs,
+      marginTop: Spacing.xs,
+    },
+    bullet_list: {
+      marginVertical: Spacing.xs,
+    },
+    ordered_list: {
+      marginVertical: Spacing.xs,
+    },
+    list_item: {
+      marginVertical: 2,
+    },
+    bullet_list_icon: {
+      color: theme.amber,
+      fontSize: 14,
+      marginRight: Spacing.xs,
+    },
+    code_inline: {
+      backgroundColor: theme.backgroundTertiary,
+      color: theme.amber,
+      fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
+      fontSize: 13,
+      paddingHorizontal: 4,
+      paddingVertical: 2,
+      borderRadius: 4,
+    },
+    fence: {
+      backgroundColor: theme.backgroundTertiary,
+      borderRadius: BorderRadius.sm,
+      padding: Spacing.sm,
+      marginVertical: Spacing.xs,
+    },
+    code_block: {
+      fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
+      fontSize: 13,
+      color: theme.text,
+    },
+    link: {
+      color: theme.blue,
+      textDecorationLine: "underline" as const,
+    },
+    paragraph: {
+      marginVertical: 4,
+    },
+  }), [theme]);
+
   const renderMessage = ({ item, index }: { item: ChatMessage; index: number }) => {
     const isUser = item.role === "user";
 
@@ -161,15 +241,18 @@ export default function AdvisorScreen() {
               : [styles.assistantBubble, { backgroundColor: theme.backgroundSecondary }],
           ]}
         >
-          <ThemedText
-            type="body"
-            style={[
-              styles.messageText,
-              { color: isUser ? "#FFFFFF" : theme.text },
-            ]}
-          >
-            {item.content}
-          </ThemedText>
+          {isUser ? (
+            <ThemedText
+              type="body"
+              style={[styles.messageText, { color: "#FFFFFF" }]}
+            >
+              {item.content}
+            </ThemedText>
+          ) : (
+            <Markdown style={markdownStyles}>
+              {item.content}
+            </Markdown>
+          )}
         </View>
       </Animated.View>
     );
