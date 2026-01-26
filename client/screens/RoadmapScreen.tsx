@@ -37,7 +37,11 @@ import {
   type Course,
   type Semester,
   type RoadmapMode,
+  type CourseStatus,
+  type CourseGrade,
 } from "@/lib/storage";
+
+const GRADES: CourseGrade[] = ["A+", "A", "A-", "B+", "B", "B-", "C+", "C", "C-", "D+", "D", "D-", "F"];
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const SEMESTER_WIDTH = SCREEN_WIDTH - Spacing.lg * 2;
@@ -61,6 +65,8 @@ export default function RoadmapScreen() {
     title: "",
     units: "3",
     category: "major" as Course["category"],
+    status: "planned" as CourseStatus,
+    grade: undefined as CourseGrade | undefined,
   });
 
   const loadData = useCallback(async () => {
@@ -100,26 +106,29 @@ export default function RoadmapScreen() {
   };
 
   const addCourse = async () => {
-    if (!newCourse.code.trim() || !newCourse.title.trim()) return;
+    if (!newCourse.title.trim()) return;
+    if (newCourse.status === "taken" && !newCourse.grade) return;
 
     await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     const currentSemester = semesters[currentSemesterIndex];
     const course: Course = {
       id: generateId(),
-      code: newCourse.code.toUpperCase(),
+      code: newCourse.code.trim().toUpperCase(),
       title: newCourse.title,
       units: parseInt(newCourse.units) || 3,
       semesterId: currentSemester.id,
-      completed: false,
+      completed: newCourse.status === "taken",
       category: newCourse.category,
       transferable: true,
+      status: newCourse.status,
+      grade: newCourse.status === "taken" ? newCourse.grade : undefined,
     };
 
     const updatedCourses = [...courses, course];
     setCourses(updatedCourses);
     await saveCourses(updatedCourses);
     setShowAddModal(false);
-    setNewCourse({ code: "", title: "", units: "3", category: "major" });
+    setNewCourse({ code: "", title: "", units: "3", category: "major", status: "planned", grade: undefined });
   };
 
   const deleteCourse = async (courseId: string) => {
@@ -406,7 +415,7 @@ export default function RoadmapScreen() {
 
             <View style={styles.inputGroup}>
               <ThemedText type="small" style={styles.label}>
-                Course Code
+                Course Code (Optional)
               </ThemedText>
               <TextInput
                 style={[
@@ -511,6 +520,87 @@ export default function RoadmapScreen() {
                 </View>
               </View>
             </View>
+
+            <View style={styles.inputGroup}>
+              <ThemedText type="small" style={styles.label}>
+                Status
+              </ThemedText>
+              <View style={styles.categoryRow}>
+                {(["planned", "in_progress", "taken"] as const).map((status) => (
+                  <Pressable
+                    key={status}
+                    onPress={() =>
+                      setNewCourse({ ...newCourse, status, grade: status !== "taken" ? undefined : newCourse.grade })
+                    }
+                    style={[
+                      styles.categoryButton,
+                      {
+                        backgroundColor:
+                          newCourse.status === status
+                            ? status === "taken" ? theme.success : status === "in_progress" ? theme.primary : theme.secondary
+                            : theme.backgroundSecondary,
+                      },
+                    ]}
+                  >
+                    <ThemedText
+                      type="small"
+                      style={{
+                        color:
+                          newCourse.status === status
+                            ? "#FFFFFF"
+                            : theme.text,
+                        fontWeight: "600",
+                      }}
+                    >
+                      {status === "planned" ? "Planned" : status === "in_progress" ? "In Progress" : "Taken"}
+                    </ThemedText>
+                  </Pressable>
+                ))}
+              </View>
+            </View>
+
+            {newCourse.status === "taken" ? (
+              <View style={styles.inputGroup}>
+                <ThemedText type="small" style={styles.label}>
+                  Grade
+                </ThemedText>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.gradeRow}
+                >
+                  {GRADES.map((grade) => (
+                    <Pressable
+                      key={grade}
+                      onPress={() => setNewCourse({ ...newCourse, grade })}
+                      style={[
+                        styles.gradeButton,
+                        {
+                          backgroundColor:
+                            newCourse.grade === grade
+                              ? theme.success
+                              : theme.backgroundSecondary,
+                          borderColor:
+                            newCourse.grade === grade
+                              ? theme.success
+                              : theme.border,
+                        },
+                      ]}
+                    >
+                      <ThemedText
+                        type="small"
+                        style={{
+                          color: newCourse.grade === grade ? "#FFFFFF" : theme.text,
+                          fontWeight: "600",
+                        }}
+                      >
+                        {grade}
+                      </ThemedText>
+                    </Pressable>
+                  ))}
+                </ScrollView>
+              </View>
+            ) : null}
 
             <Button onPress={addCourse} style={{ marginTop: Spacing.lg }}>
               Add Course
@@ -752,6 +842,19 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderRadius: BorderRadius.sm,
+  },
+  gradeRow: {
+    flexDirection: "row",
+    gap: Spacing.xs,
+    paddingVertical: Spacing.xs,
+  },
+  gradeButton: {
+    paddingHorizontal: Spacing.md,
+    height: 40,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: BorderRadius.sm,
+    borderWidth: 1,
   },
   courseDetails: {
     marginBottom: Spacing.xl,

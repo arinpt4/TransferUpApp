@@ -459,7 +459,7 @@ export default function HomeScreen() {
           icon="calculator"
           label="GPA Calc"
           gradientColors={["#10B981", "#34D399"]}
-          onPress={() => (navigation as any).navigate("ProfileTab")}
+          onPress={() => (navigation as any).navigate("GPACalculator")}
           delay={550}
           theme={theme}
         />

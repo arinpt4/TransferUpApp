@@ -30,6 +30,7 @@ import {
   getCourses,
   clearAllData,
   setOnboardingComplete,
+  saveCourses,
   type UserProfile,
   type Course,
 } from "@/lib/storage";
@@ -39,14 +40,12 @@ export default function ProfileScreen() {
   const tabBarHeight = useBottomTabBarHeight();
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
-  const { theme, isDark } = useTheme();
+  const { theme, isDark, setThemePreference } = useTheme();
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [courses, setCourses] = useState<Course[]>([]);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [showGpaModal, setShowGpaModal] = useState(false);
   const [editName, setEditName] = useState("");
-  const [gpaInput, setGpaInput] = useState("");
 
   const loadData = useCallback(async () => {
     const [userProfile, userCourses] = await Promise.all([
@@ -83,19 +82,9 @@ export default function ProfileScreen() {
     setShowEditModal(false);
   };
 
-  const saveGpa = async () => {
-    const gpa = parseFloat(gpaInput);
-    if (isNaN(gpa) || gpa < 0 || gpa > 4) {
-      return;
-    }
-    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    const updatedProfile: UserProfile = {
-      ...profile!,
-      gpa,
-    };
-    await saveUserProfile(updatedProfile);
-    setProfile(updatedProfile);
-    setShowGpaModal(false);
+  const handleToggleDarkMode = async () => {
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    await setThemePreference(isDark ? "light" : "dark");
   };
 
   const handleClearData = () => {
@@ -203,34 +192,7 @@ export default function ProfileScreen() {
 
         <Card
           elevation={1}
-          style={[styles.toolCard, { borderColor: theme.border }]}
-          onPress={() => {
-            setGpaInput(profile?.gpa?.toString() || "");
-            setShowGpaModal(true);
-          }}
-        >
-          <View style={styles.toolContent}>
-            <View
-              style={[styles.toolIcon, { backgroundColor: `${theme.primary}15` }]}
-            >
-              <Feather name="percent" size={22} color={theme.primary} />
-            </View>
-            <View style={{ flex: 1 }}>
-              <ThemedText type="h4">GPA Calculator</ThemedText>
-              <ThemedText
-                type="small"
-                style={{ color: theme.textSecondary, marginTop: 2 }}
-              >
-                Track and calculate your GPA
-              </ThemedText>
-            </View>
-            <Feather name="chevron-right" size={20} color={theme.textSecondary} />
-          </View>
-        </Card>
-
-        <Card
-          elevation={1}
-          style={[styles.toolCard, { borderColor: theme.border }]}
+          style={{ ...styles.toolCard, borderColor: theme.border }}
           onPress={() => (navigation as any).navigate("SchoolsTab")}
         >
           <View style={styles.toolContent}>
@@ -258,22 +220,23 @@ export default function ProfileScreen() {
           Settings
         </ThemedText>
 
-        <View
+        <Pressable
+          onPress={handleToggleDarkMode}
           style={[styles.settingRow, { backgroundColor: theme.backgroundDefault }]}
         >
           <View style={styles.settingContent}>
-            <Feather name="moon" size={20} color={theme.text} />
+            <Feather name={isDark ? "moon" : "sun"} size={20} color={theme.text} />
             <ThemedText type="body" style={{ marginLeft: Spacing.md }}>
-              Dark Mode
+              {isDark ? "Dark Mode" : "Light Mode"}
             </ThemedText>
           </View>
           <Switch
             value={isDark}
-            disabled
+            onValueChange={handleToggleDarkMode}
             trackColor={{ false: theme.backgroundTertiary, true: theme.primary }}
             thumbColor="#FFFFFF"
           />
-        </View>
+        </Pressable>
 
         <View
           style={[styles.settingRow, { backgroundColor: theme.backgroundDefault }]}
@@ -363,54 +326,6 @@ export default function ProfileScreen() {
         </View>
       </Modal>
 
-      <Modal
-        visible={showGpaModal}
-        animationType="slide"
-        transparent
-        onRequestClose={() => setShowGpaModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <ThemedView style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <ThemedText type="h3">Update GPA</ThemedText>
-              <Pressable onPress={() => setShowGpaModal(false)} hitSlop={12}>
-                <Feather name="x" size={24} color={theme.text} />
-              </Pressable>
-            </View>
-
-            <ThemedText
-              type="body"
-              style={{ color: theme.textSecondary, marginBottom: Spacing.lg }}
-            >
-              Enter your current cumulative GPA (0.00 - 4.00)
-            </ThemedText>
-
-            <View style={styles.inputGroup}>
-              <TextInput
-                style={[
-                  styles.input,
-                  styles.gpaInput,
-                  {
-                    backgroundColor: theme.backgroundSecondary,
-                    color: theme.text,
-                    borderColor: theme.border,
-                  },
-                ]}
-                placeholder="3.50"
-                placeholderTextColor={theme.textSecondary}
-                value={gpaInput}
-                onChangeText={setGpaInput}
-                keyboardType="decimal-pad"
-                maxLength={4}
-              />
-            </View>
-
-            <Button onPress={saveGpa} style={{ marginTop: Spacing.lg }}>
-              Save GPA
-            </Button>
-          </ThemedView>
-        </View>
-      </Modal>
     </KeyboardAwareScrollViewCompat>
   );
 }
@@ -523,10 +438,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
     fontSize: 16,
     borderWidth: 1,
-  },
-  gpaInput: {
-    fontSize: 24,
-    fontWeight: "600",
-    textAlign: "center",
   },
 });
