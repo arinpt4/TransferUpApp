@@ -4,8 +4,13 @@ import OpenAI from "openai";
 
 const ASSIST_API_BASE = "https://assist.org/api";
 
-// OpenAI client - the newest OpenAI model is "gpt-4o" as requested by user
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+// OpenAI client initialized lazily to allow app startup without API key
+function getOpenAIClient(): OpenAI {
+  if (!process.env.OPENAI_API_KEY) {
+    throw new Error("OPENAI_API_KEY environment variable is not set");
+  }
+  return new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+}
 
 const SYSTEM_PROMPT = `You are a helpful transfer advisor for California community college students. You have access to the ASSIST.org articulation database. Help students understand transfer requirements, plan their courses, and answer questions about UC/CSU transfers. Be encouraging and concise.`;
 
@@ -395,6 +400,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...(history || []),
         { role: "user", content: message },
       ];
+
+      const openai = getOpenAIClient();
 
       let response = await openai.chat.completions.create({
         model: "gpt-4o",
