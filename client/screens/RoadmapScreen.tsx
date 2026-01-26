@@ -258,12 +258,12 @@ export default function RoadmapScreen() {
         style={[
           styles.header,
           {
-            paddingTop: headerHeight + Spacing["3xl"],
+            paddingTop: Math.max(headerHeight, insets.top) + Spacing["4xl"],
             backgroundColor: theme.backgroundRoot,
           },
         ]}
       >
-        <View style={[styles.modeToggle, { marginTop: Spacing.lg }]}>
+        <View style={styles.modeToggle}>
           <Pressable
             onPress={() => handleModeChange("semester")}
             style={[
