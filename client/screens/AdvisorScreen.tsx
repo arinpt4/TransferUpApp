@@ -86,9 +86,9 @@ export default function AdvisorScreen() {
         <Pressable
           onPress={handleClearChat}
           hitSlop={12}
-          style={styles.headerButton}
+          style={[styles.headerButton, { backgroundColor: theme.backgroundSecondary }]}
         >
-          <Feather name="trash-2" size={20} color={theme.text} />
+          <Feather name="trash-2" size={18} color={theme.textSecondary} />
         </Pressable>
       ),
     });
@@ -445,10 +445,12 @@ const styles = StyleSheet.create({
     marginLeft: Spacing.xs,
   },
   headerButton: {
-    width: 40,
-    height: 40,
+    width: 36,
+    height: 36,
+    borderRadius: BorderRadius.full,
+    backgroundColor: "rgba(0, 0, 0, 0.08)",
     alignItems: "center",
     justifyContent: "center",
-    marginRight: Spacing.xs,
+    marginRight: Spacing.sm,
   },
 });

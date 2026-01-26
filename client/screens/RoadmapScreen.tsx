@@ -171,7 +171,7 @@ export default function RoadmapScreen() {
     const progress = getSemesterProgress(item.id);
 
     return (
-      <View style={[styles.semesterContainer, { width: SEMESTER_WIDTH }]}>
+      <View style={[styles.semesterContainer, { width: SCREEN_WIDTH, paddingHorizontal: Spacing.lg }]}>
         <View style={styles.semesterHeader}>
           <View>
             <ThemedText type="h3">{item.name}</ThemedText>
@@ -258,12 +258,12 @@ export default function RoadmapScreen() {
         style={[
           styles.header,
           {
-            paddingTop: headerHeight + Spacing.xl,
+            paddingTop: headerHeight + Spacing["3xl"],
             backgroundColor: theme.backgroundRoot,
           },
         ]}
       >
-        <View style={styles.modeToggle}>
+        <View style={[styles.modeToggle, { marginTop: Spacing.lg }]}>
           <Pressable
             onPress={() => handleModeChange("semester")}
             style={[
@@ -349,16 +349,19 @@ export default function RoadmapScreen() {
           renderItem={renderSemester}
           keyExtractor={(item) => item.id}
           horizontal
+          pagingEnabled
           showsHorizontalScrollIndicator={false}
-          snapToInterval={SEMESTER_WIDTH}
-          snapToAlignment="start"
           decelerationRate="fast"
           contentContainerStyle={{
-            paddingHorizontal: Spacing.lg,
             paddingBottom: tabBarHeight + Spacing["6xl"],
           }}
           onViewableItemsChanged={onViewableItemsChanged}
           viewabilityConfig={viewabilityConfig}
+          getItemLayout={(data, index) => ({
+            length: SCREEN_WIDTH,
+            offset: SCREEN_WIDTH * index,
+            index,
+          })}
         />
       )}
 
