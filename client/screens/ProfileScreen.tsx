@@ -16,6 +16,7 @@ import { useNavigation } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import Animated, { FadeInDown } from "react-native-reanimated";
+import { reloadAppAsync } from "expo";
 
 import { KeyboardAwareScrollViewCompat } from "@/components/KeyboardAwareScrollViewCompat";
 import { ThemedText } from "@/components/ThemedText";
@@ -29,8 +30,6 @@ import {
   saveUserProfile,
   getCourses,
   clearAllData,
-  setOnboardingComplete,
-  saveCourses,
   type UserProfile,
   type Course,
 } from "@/lib/storage";
@@ -87,28 +86,36 @@ export default function ProfileScreen() {
     await setThemePreference(isDark ? "light" : "dark");
   };
 
-  const handleClearData = () => {
-    Alert.alert(
-      "Clear All Data",
-      "Are you sure you want to delete your data? This action cannot be undone.",
-      [
-        {
-          text: "Cancel",
-          style: "cancel",
-        },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-            await clearAllData();
-            await setOnboardingComplete(false);
-            setProfile(null);
-            setCourses([]);
+  const handleClearData = async () => {
+    if (Platform.OS === "web") {
+      const confirmed = window.confirm(
+        "Are you sure you want to delete your data? This action cannot be undone."
+      );
+      if (confirmed) {
+        await clearAllData();
+        await reloadAppAsync();
+      }
+    } else {
+      Alert.alert(
+        "Clear All Data",
+        "Are you sure you want to delete your data? This action cannot be undone.",
+        [
+          {
+            text: "Cancel",
+            style: "cancel",
           },
-        },
-      ]
-    );
+          {
+            text: "Delete",
+            style: "destructive",
+            onPress: async () => {
+              await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+              await clearAllData();
+              await reloadAppAsync();
+            },
+          },
+        ]
+      );
+    }
   };
 
   const completedCourses = courses.filter((c) => c.completed);
