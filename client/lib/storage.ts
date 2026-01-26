@@ -12,6 +12,7 @@ const STORAGE_KEYS = {
   ALERTS: "alerts",
   CACHED_INSTITUTIONS: "cached_institutions",
   CHAT_HISTORY: "chatHistory",
+  THEME: "theme",
 } as const;
 
 export type RoadmapMode = "semester" | "quarter";
@@ -32,6 +33,9 @@ export interface Institution {
   isCommunityCollege: boolean;
 }
 
+export type CourseStatus = "planned" | "in_progress" | "taken";
+export type CourseGrade = "A+" | "A" | "A-" | "B+" | "B" | "B-" | "C+" | "C" | "C-" | "D+" | "D" | "D-" | "F";
+
 export interface Course {
   id: string;
   code: string;
@@ -42,6 +46,8 @@ export interface Course {
   category: "major" | "ge" | "elective";
   transferable: boolean;
   notes?: string;
+  status?: CourseStatus;
+  grade?: CourseGrade;
 }
 
 export interface Semester {
@@ -204,7 +210,61 @@ export async function clearChatHistory(): Promise<void> {
 }
 
 export async function clearAllData(): Promise<void> {
-  await AsyncStorage.multiRemove(Object.values(STORAGE_KEYS));
+  const allKeys = await AsyncStorage.getAllKeys();
+  if (allKeys.length > 0) {
+    await AsyncStorage.multiRemove(allKeys as string[]);
+  }
+}
+
+export type ThemePreference = "light" | "dark" | "system";
+
+export async function getThemePreference(): Promise<ThemePreference> {
+  try {
+    const value = await AsyncStorage.getItem(STORAGE_KEYS.THEME);
+    return (value as ThemePreference) || "dark";
+  } catch {
+    return "dark";
+  }
+}
+
+export async function saveThemePreference(theme: ThemePreference): Promise<void> {
+  await AsyncStorage.setItem(STORAGE_KEYS.THEME, theme);
+}
+
+export const GRADE_POINTS: Record<CourseGrade, number> = {
+  "A+": 4.0,
+  "A": 4.0,
+  "A-": 3.7,
+  "B+": 3.3,
+  "B": 3.0,
+  "B-": 2.7,
+  "C+": 2.3,
+  "C": 2.0,
+  "C-": 1.7,
+  "D+": 1.3,
+  "D": 1.0,
+  "D-": 0.7,
+  "F": 0.0,
+};
+
+export function calculateGPA(courses: Course[]): { gpa: number; totalUnits: number } {
+  const takenCourses = courses.filter(c => c.status === "taken" && c.grade);
+  if (takenCourses.length === 0) return { gpa: 0, totalUnits: 0 };
+  
+  let totalPoints = 0;
+  let totalUnits = 0;
+  
+  for (const course of takenCourses) {
+    if (course.grade) {
+      totalPoints += GRADE_POINTS[course.grade] * course.units;
+      totalUnits += course.units;
+    }
+  }
+  
+  return {
+    gpa: totalUnits > 0 ? totalPoints / totalUnits : 0,
+    totalUnits,
+  };
 }
 
 function generateDefaultSemesters(): Semester[] {

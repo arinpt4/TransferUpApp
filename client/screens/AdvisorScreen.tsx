@@ -88,7 +88,7 @@ export default function AdvisorScreen() {
           hitSlop={16}
           style={styles.headerButton}
         >
-          <Feather name="trash-2" size={20} color={theme.text} />
+          <Feather name="trash-2" size={20} color={theme.textSecondary} />
         </Pressable>
       ),
     });

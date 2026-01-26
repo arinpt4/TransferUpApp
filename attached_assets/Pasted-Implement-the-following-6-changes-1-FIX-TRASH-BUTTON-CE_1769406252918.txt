@@ -1,0 +1,76 @@
+Implement the following 6 changes:
+
+1. FIX TRASH BUTTON CENTERING (ADVISOR SCREEN):
+   - The trash icon is still not centered in the circular button
+   - Find the trash button component and ensure:
+     * Container has: alignItems: 'center', justifyContent: 'center', display: 'flex'
+     * Icon is wrapped in a View with these exact styles
+     * Remove any absolute positioning or transforms on the icon
+     * Set icon size and container size to be proportional (e.g., icon: 24, container: 48)
+   - The icon should be perfectly centered both horizontally and vertically
+
+2. MAKE COURSE CODE OPTIONAL:
+   - In the "Add Course" form, make the course code field optional
+   - Change the placeholder to say "Course Code (Optional)"
+   - Remove any validation that requires course code
+   - Allow users to save a course with only: title, units, and semester
+   - If course code is empty, display only the title on the roadmap card
+
+3. FIX CLEAR ALL DATA TO DELETE ROADMAP COURSES:
+   - The clear all data function is not deleting roadmap courses
+   - Debug and find ALL AsyncStorage keys being used for roadmap data
+   - Common keys might be: 'semesters', 'quarters', 'courses', 'roadmapData', 'semesterData', 'quarterData'
+   - Add console.log to show which keys are being deleted
+   - After deletion, force state reset by setting courses to empty array: []
+   - Test that roadmap is completely empty after clearing data
+
+4. ADD COURSE STATUS (TAKEN/IN PROGRESS):
+   - In the "Add Course" modal, add a status selector with 3 options:
+     * "Planned" (default - no grade required)
+     * "In Progress" (no grade required)
+     * "Taken" (requires grade input)
+   - Use a segmented control or radio buttons for status selection
+   - When "Taken" is selected, show a grade dropdown with options:
+     * A+, A, A-, B+, B, B-, C+, C, C-, D+, D, D-, F
+   - Store the status and grade with each course in the roadmap data
+   - On roadmap cards, show a small badge for "In Progress" (amber) or "Taken" with grade (green for A/B, yellow for C, red for D/F)
+
+5. CREATE GPA CALCULATOR PAGE:
+   - When user taps "GPA Calculator" (from Home or Profile), navigate to a new screen
+   - This screen should:
+     * Calculate cumulative GPA from all "Taken" courses using standard 4.0 scale:
+       A+ = 4.0, A = 4.0, A- = 3.7, B+ = 3.3, B = 3.0, B- = 2.7, C+ = 2.3, C = 2.0, C- = 1.7, D+ = 1.3, D = 1.0, D- = 0.7, F = 0.0
+     * Display large GPA number (e.g., "3.45") with gradient background (amber to blue gradient matching app theme)
+     * Show total units completed below the GPA
+     * Use large, bold typography for the GPA number (72pt+)
+     * Apply glassmorphism effect with subtle blur
+   - Add "View Breakdown" button that expands to show:
+     * List of all taken courses with their grades
+     * Course code, title, units, and grade for each
+     * Clean, organized table or card layout
+   - Add dark mode support - gradient should invert/adjust for light mode
+
+6. REMOVE GPA CALC FROM PROFILE & FIX DARK MODE:
+   - Remove the "GPA Calculator" quick action from the Profile screen (already accessible from Home)
+   - Fix the dark mode toggle:
+     * Currently clicking it doesn't switch to light mode
+     * Implement proper theme switching using React Context or state management
+     * When toggled, switch between dark and light color schemes:
+       - Dark mode: navy background (#0F172A), white text
+       - Light mode: white/light gray background (#F8FAFC), dark text
+     * Store theme preference in AsyncStorage with key 'theme'
+     * Apply theme to ALL screens including GPA calculator
+   - Ensure the GPA calculator gradient adapts to theme:
+     * Dark mode: amber (#F59E0B) to dark blue (#1E40AF)
+     * Light mode: lighter amber to lighter blue with good contrast
+
+TESTING REQUIREMENTS:
+- Verify trash button is centered
+- Test adding courses without course codes
+- Confirm clear all data removes ALL roadmap courses
+- Test adding courses with all 3 statuses (Planned, In Progress, Taken)
+- Verify GPA calculation is accurate
+- Test theme switching across all screens
+- Ensure GPA calculator looks clean in both dark and light modes
+
+Make these changes without breaking existing functionality.
