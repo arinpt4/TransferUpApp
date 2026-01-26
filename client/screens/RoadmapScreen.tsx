@@ -256,56 +256,11 @@ export default function RoadmapScreen() {
         style={[
           styles.header,
           {
-            paddingTop: headerHeight + Spacing.lg,
+            paddingTop: headerHeight + Spacing.xl,
             backgroundColor: theme.backgroundRoot,
           },
         ]}
       >
-        <View style={styles.modeToggle}>
-          <Pressable
-            onPress={() => handleModeChange("semester")}
-            style={[
-              styles.modeButton,
-              {
-                backgroundColor: roadmapMode === "semester" ? theme.primary : "transparent",
-                borderColor: theme.primary,
-              },
-            ]}
-            testID="mode-semester"
-          >
-            <ThemedText
-              type="small"
-              style={{
-                color: roadmapMode === "semester" ? "#FFFFFF" : theme.primary,
-                fontWeight: "600",
-              }}
-            >
-              Semester
-            </ThemedText>
-          </Pressable>
-          <Pressable
-            onPress={() => handleModeChange("quarter")}
-            style={[
-              styles.modeButton,
-              {
-                backgroundColor: roadmapMode === "quarter" ? theme.primary : "transparent",
-                borderColor: theme.primary,
-              },
-            ]}
-            testID="mode-quarter"
-          >
-            <ThemedText
-              type="small"
-              style={{
-                color: roadmapMode === "quarter" ? "#FFFFFF" : theme.primary,
-                fontWeight: "600",
-              }}
-            >
-              Quarter
-            </ThemedText>
-          </Pressable>
-        </View>
-
         <View style={styles.progressHeader}>
           <ThemedText type="small" style={{ color: theme.textSecondary }}>
             Total Progress
@@ -334,6 +289,53 @@ export default function RoadmapScreen() {
               ]}
             />
           ))}
+        </View>
+
+        <View style={styles.modeToggleContainer}>
+          <View style={styles.modeToggle}>
+            <Pressable
+              onPress={() => handleModeChange("semester")}
+              style={[
+                styles.modeButton,
+                {
+                  backgroundColor: roadmapMode === "semester" ? theme.primary : "transparent",
+                  borderColor: theme.primary,
+                },
+              ]}
+              testID="mode-semester"
+            >
+              <ThemedText
+                type="small"
+                style={{
+                  color: roadmapMode === "semester" ? "#FFFFFF" : theme.primary,
+                  fontWeight: "600",
+                }}
+              >
+                Semester
+              </ThemedText>
+            </Pressable>
+            <Pressable
+              onPress={() => handleModeChange("quarter")}
+              style={[
+                styles.modeButton,
+                {
+                  backgroundColor: roadmapMode === "quarter" ? theme.primary : "transparent",
+                  borderColor: theme.primary,
+                },
+              ]}
+              testID="mode-quarter"
+            >
+              <ThemedText
+                type="small"
+                style={{
+                  color: roadmapMode === "quarter" ? "#FFFFFF" : theme.primary,
+                  fontWeight: "600",
+                }}
+              >
+                Quarter
+              </ThemedText>
+            </Pressable>
+          </View>
         </View>
       </View>
 
@@ -633,9 +635,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingBottom: Spacing.lg,
   },
+  modeToggleContainer: {
+    marginTop: Spacing.xl,
+    marginBottom: Spacing.md,
+  },
   modeToggle: {
     flexDirection: "row",
-    marginBottom: Spacing.md,
     borderRadius: BorderRadius.md,
     overflow: "hidden",
   },
