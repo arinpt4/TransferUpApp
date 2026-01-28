@@ -146,6 +146,12 @@ export default function TransferRequirementsScreen() {
     loadExistingData();
   }, [loadMajors, loadExistingData]);
 
+  // Reload roadmap mode and periods when screen gets focus (in case user changed mode on Roadmap screen)
+  useEffect(() => {
+    const unsubscribe = navigation.addListener("focus", loadExistingData);
+    return unsubscribe;
+  }, [navigation, loadExistingData]);
+
   const onRefresh = async () => {
     setRefreshing(true);
     await loadMajors();
