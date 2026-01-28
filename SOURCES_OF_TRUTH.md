@@ -251,6 +251,35 @@ await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
 ```
 
+### Theme-Aware Components Pattern
+
+When building components that need different styles for dark/light mode:
+
+```typescript
+const { theme, isDark } = useTheme();
+
+// For backgrounds with opacity
+backgroundColor: isDark ? "rgba(30, 41, 59, 0.6)" : theme.backgroundDefault
+
+// For borders with opacity
+borderColor: isDark ? `${color}30` : `${color}40`
+
+// For SVG strokes
+stroke={isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"}
+
+// For BlurView (iOS)
+<BlurView tint={isDark ? "dark" : "light"} />
+
+// For gradients
+gradientColors={isDark 
+  ? ["rgba(16, 185, 129, 0.15)", "rgba(16, 185, 129, 0.05)"] 
+  : ["rgba(16, 185, 129, 0.12)", "rgba(16, 185, 129, 0.04)"]}
+```
+
+**Key principle:** Never hardcode colors like `#0F172A` or `rgba(30, 41, 59, 0.9)`. Always use `theme.*` properties or conditional `isDark` checks.
+
+---
+
 ### Safe Area Padding Pattern
 
 Consistent screen padding calculation:
