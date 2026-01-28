@@ -14,6 +14,7 @@ import {
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useNavigation } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
@@ -50,6 +51,7 @@ export default function RoadmapScreen() {
   const headerHeight = useHeaderHeight();
   const tabBarHeight = useBottomTabBarHeight();
   const insets = useSafeAreaInsets();
+  const navigation = useNavigation();
   const { theme } = useTheme();
   const flatListRef = useRef<FlatList>(null);
 
@@ -84,6 +86,11 @@ export default function RoadmapScreen() {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener("focus", loadData);
+    return unsubscribe;
+  }, [navigation, loadData]);
 
   const handleModeChange = async (mode: RoadmapMode) => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);

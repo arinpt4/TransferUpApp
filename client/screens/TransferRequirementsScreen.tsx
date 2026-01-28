@@ -28,9 +28,12 @@ import {
   getCourses,
   saveCourses,
   getSemesters,
+  getQuarters,
+  getRoadmapMode,
   generateId,
   type Course,
   type Semester,
+  type RoadmapMode,
 } from "@/lib/storage";
 
 interface Major {
@@ -69,14 +72,15 @@ export default function TransferRequirementsScreen() {
   const [selectedMajor, setSelectedMajor] = useState<Major | null>(null);
   const [courses, setCourses] = useState<AssistCourse[]>([]);
   const [existingCourses, setExistingCourses] = useState<Course[]>([]);
-  const [semesters, setSemesters] = useState<Semester[]>([]);
+  const [periods, setPeriods] = useState<Semester[]>([]);
+  const [roadmapMode, setRoadmapMode] = useState<RoadmapMode>("semester");
   const [loading, setLoading] = useState(true);
   const [loadingCourses, setLoadingCourses] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCourses, setSelectedCourses] = useState<Set<string>>(new Set());
   const [showAddModal, setShowAddModal] = useState(false);
-  const [selectedSemesterId, setSelectedSemesterId] = useState<string>("");
+  const [selectedPeriodId, setSelectedPeriodId] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
 
   const loadMajors = useCallback(async () => {
@@ -123,14 +127,17 @@ export default function TransferRequirementsScreen() {
   }, []);
 
   const loadExistingData = useCallback(async () => {
-    const [userCourses, userSemesters] = await Promise.all([
+    const [userCourses, mode] = await Promise.all([
       getCourses(),
-      getSemesters(),
+      getRoadmapMode(),
     ]);
     setExistingCourses(userCourses);
-    setSemesters(userSemesters);
-    if (userSemesters.length > 0) {
-      setSelectedSemesterId(userSemesters[0].id);
+    setRoadmapMode(mode);
+    
+    const userPeriods = mode === "quarter" ? await getQuarters() : await getSemesters();
+    setPeriods(userPeriods);
+    if (userPeriods.length > 0) {
+      setSelectedPeriodId(userPeriods[0].id);
     }
   }, []);
 
@@ -173,7 +180,7 @@ export default function TransferRequirementsScreen() {
   };
 
   const addSelectedCourses = async () => {
-    if (selectedCourses.size === 0 || !selectedSemesterId) return;
+    if (selectedCourses.size === 0 || !selectedPeriodId) return;
 
     await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
@@ -186,10 +193,11 @@ export default function TransferRequirementsScreen() {
           code: assistCourse.code,
           title: assistCourse.title,
           units: assistCourse.units,
-          semesterId: selectedSemesterId,
+          semesterId: selectedPeriodId,
           completed: false,
           category: "major",
           transferable: true,
+          status: "planned",
           notes: `From ASSIST.org - ${selectedMajor?.label || ""}`,
         });
       }
@@ -507,7 +515,7 @@ export default function TransferRequirementsScreen() {
             {selectedCourses.size} course{selectedCourses.size !== 1 ? "s" : ""}{" "}
             selected
           </ThemedText>
-          <Button onPress={() => setShowAddModal(true)} testID="add-to-roadmap-btn">
+          <Button onPress={() => setShowAddModal(true)}>
             Add to Roadmap
           </Button>
         </View>
@@ -522,7 +530,9 @@ export default function TransferRequirementsScreen() {
         <View style={styles.modalOverlay}>
           <ThemedView style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <ThemedText type="h3">Add to Semester</ThemedText>
+              <ThemedText type="h3">
+                Select {roadmapMode === "quarter" ? "Quarter" : "Term"}
+              </ThemedText>
               <Pressable onPress={() => setShowAddModal(false)} hitSlop={12}>
                 <Feather name="x" size={24} color={theme.text} />
               </Pressable>
@@ -532,30 +542,30 @@ export default function TransferRequirementsScreen() {
               type="body"
               style={{ color: theme.textSecondary, marginBottom: Spacing.lg }}
             >
-              Select which semester to add {selectedCourses.size} course
+              Select which {roadmapMode === "quarter" ? "quarter" : "semester"} to add {selectedCourses.size} course
               {selectedCourses.size !== 1 ? "s" : ""} to:
             </ThemedText>
 
-            {semesters.map((semester) => (
+            {periods.map((period) => (
               <Pressable
-                key={semester.id}
-                onPress={() => setSelectedSemesterId(semester.id)}
+                key={period.id}
+                onPress={() => setSelectedPeriodId(period.id)}
                 style={[
                   styles.semesterOption,
                   {
                     backgroundColor:
-                      selectedSemesterId === semester.id
+                      selectedPeriodId === period.id
                         ? `${theme.primary}15`
                         : theme.backgroundSecondary,
                     borderColor:
-                      selectedSemesterId === semester.id
+                      selectedPeriodId === period.id
                         ? theme.primary
                         : theme.border,
                   },
                 ]}
               >
-                <ThemedText type="body">{semester.name}</ThemedText>
-                {selectedSemesterId === semester.id ? (
+                <ThemedText type="body">{period.name}</ThemedText>
+                {selectedPeriodId === period.id ? (
                   <Feather name="check" size={18} color={theme.primary} />
                 ) : null}
               </Pressable>

@@ -1,0 +1,61 @@
+Fix the "Add to Roadmap" feature when adding courses from Transfer Requirements:
+
+1. DEBUG THE ISSUE:
+   - Courses are being marked as "In Roadmap" but not actually appearing on the Roadmap screen
+   - Add console.log statements to trace:
+     * When user clicks "Add to Roadmap" button
+     * What data is being saved to AsyncStorage
+     * What key is being used to store the courses
+     * Whether the data is successfully saved
+   - Check if there's a mismatch between the storage key and the key being read on Roadmap screen
+
+2. FIX DATA STORAGE:
+   - When adding courses from Transfer Requirements to Roadmap:
+     * Get the current roadmap mode (semester or quarter) from AsyncStorage key 'roadmapMode'
+     * Determine which semester/quarter to add to (let user select, or default to next available)
+     * Save courses to the correct AsyncStorage key that Roadmap screen reads from
+     * Update the state immediately so changes reflect without app restart
+
+3. ADD SEMESTER/QUARTER SELECTION MODAL:
+   - When user clicks "Add to Roadmap" from Transfer Requirements, show a modal:
+     * Title: "Select Term"
+     * Display list of available semesters (if in semester mode) or quarters (if in quarter mode)
+     * User selects which term to add the course to
+     * Courses get added to that specific term
+   - The modal should respect the current roadmap mode (semester vs quarter)
+
+4. RESPECT ROADMAP MODE:
+   - Check the 'roadmapMode' value from AsyncStorage
+   - If mode is "semester": add courses to semester structure
+   - If mode is "quarter": add courses to quarter structure
+   - Use the same data structure that Roadmap screen expects
+
+5. UPDATE "IN ROADMAP" BADGE LOGIC:
+   - After adding a course, verify it exists in the roadmap data
+   - The "In Roadmap" badge should only show if the course is actually present in AsyncStorage
+   - Check by course code or unique identifier to prevent duplicates
+
+6. ENSURE STATE SYNCHRONIZATION:
+   - After adding courses, trigger a state update on the Roadmap screen
+   - Use React Navigation's focus listener or context to refresh roadmap when navigating back
+   - Courses should appear immediately on the Roadmap screen
+
+7. HANDLE COURSE DATA FORMAT:
+   - Ensure courses from Transfer Requirements have all required fields:
+     * Course code (if available)
+     * Course title
+     * Units
+     * Status (default to "Planned")
+     * Department (if available)
+   - Transform the API data format to match the roadmap course format
+
+TESTING CHECKLIST:
+- Add a course from Transfer Requirements
+- Verify it appears on Roadmap screen immediately
+- Check that it goes to the correct semester/quarter
+- Verify "In Roadmap" badge shows correctly
+- Test in both semester and quarter modes
+- Test adding multiple courses
+- Verify no duplicate courses are created
+
+Debug and fix the entire flow from Transfer Requirements → Add to Roadmap → Display on Roadmap screen.
