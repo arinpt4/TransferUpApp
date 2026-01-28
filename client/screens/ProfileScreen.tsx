@@ -245,21 +245,6 @@ export default function ProfileScreen() {
           />
         </Pressable>
 
-        <View
-          style={[styles.settingRow, { backgroundColor: theme.backgroundDefault }]}
-        >
-          <View style={styles.settingContent}>
-            <Feather name="bell" size={20} color={theme.text} />
-            <ThemedText type="body" style={{ marginLeft: Spacing.md }}>
-              Notifications
-            </ThemedText>
-          </View>
-          <Switch
-            value={true}
-            trackColor={{ false: theme.backgroundTertiary, true: theme.primary }}
-            thumbColor="#FFFFFF"
-          />
-        </View>
       </Animated.View>
 
       <Animated.View entering={FadeInDown.delay(400).duration(400)}>

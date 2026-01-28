@@ -27,6 +27,7 @@ import Svg, { Circle, Defs, LinearGradient as SvgGradient, Stop } from "react-na
 import { KeyboardAwareScrollViewCompat } from "@/components/KeyboardAwareScrollViewCompat";
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
+import { Colors } from "@/constants/theme";
 import { Spacing, BorderRadius } from "@/constants/theme";
 import {
   getUserProfile,
@@ -42,7 +43,7 @@ const RING_STROKE_WIDTH = 12;
 const RING_RADIUS = (RING_SIZE - RING_STROKE_WIDTH) / 2;
 const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
 
-function CircularProgress({ progress, theme }: { progress: number; theme: any }) {
+function CircularProgress({ progress, theme, isDark }: { progress: number; theme: any; isDark: boolean }) {
   const animatedProgress = useSharedValue(0);
 
   useEffect(() => {
@@ -72,7 +73,7 @@ function CircularProgress({ progress, theme }: { progress: number; theme: any })
           cx={RING_SIZE / 2}
           cy={RING_SIZE / 2}
           r={RING_RADIUS}
-          stroke="rgba(255,255,255,0.1)"
+          stroke={isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"}
           strokeWidth={RING_STROKE_WIDTH}
           fill="transparent"
         />
@@ -140,6 +141,7 @@ function StatCard({
   gradientColors,
   delay,
   theme,
+  isDark,
   suffix = "",
 }: {
   icon: keyof typeof Ionicons.glyphMap;
@@ -149,6 +151,7 @@ function StatCard({
   gradientColors: [string, string];
   delay: number;
   theme: any;
+  isDark: boolean;
   suffix?: string;
 }) {
   return (
@@ -160,7 +163,7 @@ function StatCard({
         colors={gradientColors}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        style={[styles.statCard, { borderColor: `${color}30` }]}
+        style={[styles.statCard, { borderColor: isDark ? `${color}30` : `${color}40` }]}
       >
         <View style={[styles.statIconContainer, { backgroundColor: `${color}20` }]}>
           <Ionicons name={icon} size={20} color={color} />
@@ -299,7 +302,7 @@ export default function HomeScreen() {
   const headerHeight = useHeaderHeight();
   const tabBarHeight = useBottomTabBarHeight();
   const navigation = useNavigation();
-  const { theme } = useTheme();
+  const { theme, isDark } = useTheme();
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [courses, setCourses] = useState<Course[]>([]);
@@ -341,7 +344,7 @@ export default function HomeScreen() {
 
   return (
     <KeyboardAwareScrollViewCompat
-      style={{ flex: 1, backgroundColor: "#0F172A" }}
+      style={{ flex: 1, backgroundColor: theme.backgroundRoot }}
       contentContainerStyle={{
         paddingTop: headerHeight + Spacing.xl,
         paddingBottom: tabBarHeight + Spacing["2xl"],
@@ -366,10 +369,11 @@ export default function HomeScreen() {
       <Animated.View entering={FadeInDown.delay(100).duration(500)}>
         <View style={styles.progressCardOuter}>
           {Platform.OS === "ios" ? (
-            <BlurView intensity={40} tint="dark" style={styles.progressCardBlur}>
+            <BlurView intensity={40} tint={isDark ? "dark" : "light"} style={styles.progressCardBlur}>
               <ProgressCardContent
                 progress={progress}
                 theme={theme}
+                isDark={isDark}
                 completedCourses={completedCourses.length}
                 completedUnits={completedUnits}
                 totalUnits={totalUnits}
@@ -377,10 +381,11 @@ export default function HomeScreen() {
               />
             </BlurView>
           ) : (
-            <View style={[styles.progressCardFallback, { backgroundColor: "rgba(30, 41, 59, 0.9)" }]}>
+            <View style={[styles.progressCardFallback, { backgroundColor: isDark ? "rgba(30, 41, 59, 0.9)" : "rgba(255, 255, 255, 0.95)" }]}>
               <ProgressCardContent
                 progress={progress}
                 theme={theme}
+                isDark={isDark}
                 completedCourses={completedCourses.length}
                 completedUnits={completedUnits}
                 totalUnits={totalUnits}
@@ -397,27 +402,30 @@ export default function HomeScreen() {
           label="Completed"
           value={completedCourses.length}
           color={theme.success}
-          gradientColors={["rgba(16, 185, 129, 0.15)", "rgba(16, 185, 129, 0.05)"]}
+          gradientColors={isDark ? ["rgba(16, 185, 129, 0.15)", "rgba(16, 185, 129, 0.05)"] : ["rgba(16, 185, 129, 0.12)", "rgba(16, 185, 129, 0.04)"]}
           delay={200}
           theme={theme}
+          isDark={isDark}
         />
         <StatCard
           icon="book"
           label="Units Done"
           value={completedUnits}
           color={theme.primary}
-          gradientColors={["rgba(245, 158, 11, 0.15)", "rgba(245, 158, 11, 0.05)"]}
+          gradientColors={isDark ? ["rgba(245, 158, 11, 0.15)", "rgba(245, 158, 11, 0.05)"] : ["rgba(245, 158, 11, 0.12)", "rgba(245, 158, 11, 0.04)"]}
           delay={250}
           theme={theme}
+          isDark={isDark}
         />
         <StatCard
           icon="time"
           label="Remaining"
           value={courses.length - completedCourses.length}
           color={theme.secondary}
-          gradientColors={["rgba(59, 130, 246, 0.15)", "rgba(59, 130, 246, 0.05)"]}
+          gradientColors={isDark ? ["rgba(59, 130, 246, 0.15)", "rgba(59, 130, 246, 0.05)"] : ["rgba(30, 64, 175, 0.12)", "rgba(30, 64, 175, 0.04)"]}
           delay={300}
           theme={theme}
+          isDark={isDark}
         />
       </View>
 
@@ -475,7 +483,7 @@ export default function HomeScreen() {
       </Animated.View>
 
       <Animated.View entering={FadeInDown.delay(650).duration(400)}>
-        <View style={[styles.activityCard, { backgroundColor: "rgba(30, 41, 59, 0.6)", borderColor: theme.border }]}>
+        <View style={[styles.activityCard, { backgroundColor: isDark ? "rgba(30, 41, 59, 0.6)" : theme.backgroundDefault, borderColor: theme.border }]}>
           {recentCourses.length > 0 ? (
             recentCourses.map((course, index) => (
               <RecentActivityItem
@@ -498,6 +506,7 @@ export default function HomeScreen() {
 function ProgressCardContent({
   progress,
   theme,
+  isDark,
   completedCourses,
   completedUnits,
   totalUnits,
@@ -505,6 +514,7 @@ function ProgressCardContent({
 }: {
   progress: number;
   theme: any;
+  isDark: boolean;
   completedCourses: number;
   completedUnits: number;
   totalUnits: number;
@@ -524,7 +534,7 @@ function ProgressCardContent({
             {completedUnits} of {totalUnits} units complete
           </ThemedText>
         </View>
-        <CircularProgress progress={progress} theme={theme} />
+        <CircularProgress progress={progress} theme={theme} isDark={isDark} />
       </View>
     </View>
   );
@@ -566,13 +576,13 @@ const styles = StyleSheet.create({
   progressCardBlur: {
     borderRadius: BorderRadius.xl,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.1)",
+    borderColor: "rgba(0,0,0,0.1)",
     overflow: "hidden",
   },
   progressCardFallback: {
     borderRadius: BorderRadius.xl,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.1)",
+    borderColor: "rgba(0,0,0,0.1)",
   },
   progressCardContent: {
     padding: Spacing.xl,
