@@ -1,15 +1,15 @@
 import React, { ReactNode } from "react";
-import { StyleSheet, Pressable, ViewStyle, StyleProp } from "react-native";
-import Animated, {
+import { StyleSheet, ViewStyle, StyleProp } from "react-native";
+import {
   useAnimatedStyle,
   useSharedValue,
   withSpring,
-  WithSpringConfig,
 } from "react-native-reanimated";
 
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { BorderRadius, Spacing } from "@/constants/theme";
+import { springConfig, AnimatedPressable } from "@/lib/animations";
 
 interface ButtonProps {
   onPress?: () => void;
@@ -17,16 +17,6 @@ interface ButtonProps {
   style?: StyleProp<ViewStyle>;
   disabled?: boolean;
 }
-
-const springConfig: WithSpringConfig = {
-  damping: 15,
-  mass: 0.3,
-  stiffness: 150,
-  overshootClamping: true,
-  energyThreshold: 0.001,
-};
-
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 export function Button({
   onPress,

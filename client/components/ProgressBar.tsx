@@ -4,11 +4,11 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSpring,
-  WithSpringConfig,
 } from "react-native-reanimated";
 
 import { useTheme } from "@/hooks/useTheme";
 import { BorderRadius } from "@/constants/theme";
+import { springConfig } from "@/lib/animations";
 
 interface ProgressBarProps {
   progress: number;
@@ -16,12 +16,6 @@ interface ProgressBarProps {
   style?: ViewStyle;
   showGlow?: boolean;
 }
-
-const springConfig: WithSpringConfig = {
-  damping: 20,
-  mass: 0.5,
-  stiffness: 100,
-};
 
 export function ProgressBar({
   progress,

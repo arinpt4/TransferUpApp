@@ -335,18 +335,31 @@ async function executeFunction(name: string, args: any): Promise<string> {
 }
 
 function parseArticulationDataForChat(data: any): any[] {
+  const fullCourses = parseArticulationData(data);
+  return fullCourses.map(c => ({
+    code: c.code,
+    title: c.title,
+    units: c.units,
+  }));
+}
+
+function parseArticulationData(data: any): any[] {
   const courses: any[] = [];
+  
   try {
     const result = data?.result;
     if (!result) return courses;
+
     const templateAssets = result.templateAssets;
     if (!templateAssets) return courses;
+
     let assets: any[];
     if (typeof templateAssets === "string") {
       assets = JSON.parse(templateAssets);
     } else {
       assets = templateAssets;
     }
+
     for (const asset of assets) {
       if (asset.type === "RequirementGroup" && asset.sections) {
         for (const section of asset.sections) {
@@ -358,10 +371,29 @@ function parseArticulationDataForChat(data: any): any[] {
                     const course = cell.course;
                     if (course.courseTitle && course.courseNumber) {
                       courses.push({
+                        id: `${course.prefix || ""}${course.courseNumber}`,
                         code: `${course.prefix || ""} ${course.courseNumber}`.trim(),
                         title: course.courseTitle,
                         units: course.maxUnits || course.minUnits || 3,
+                        department: course.department || course.prefixDescription || "",
+                        transferable: true,
+                        source: "ASSIST",
                       });
+                    }
+                  }
+                  if (cell.courses && Array.isArray(cell.courses)) {
+                    for (const course of cell.courses) {
+                      if (course.courseTitle && course.courseNumber) {
+                        courses.push({
+                          id: `${course.prefix || ""}${course.courseNumber}`,
+                          code: `${course.prefix || ""} ${course.courseNumber}`.trim(),
+                          title: course.courseTitle,
+                          units: course.maxUnits || course.minUnits || 3,
+                          department: course.department || course.prefixDescription || "",
+                          transferable: true,
+                          source: "ASSIST",
+                        });
+                      }
                     }
                   }
                 }
@@ -374,7 +406,13 @@ function parseArticulationDataForChat(data: any): any[] {
   } catch (e) {
     console.error("Error parsing articulation data:", e);
   }
-  return courses.filter((c, i, self) => i === self.findIndex((x) => x.code === c.code));
+
+  const uniqueCourses = courses.filter(
+    (course, index, self) =>
+      index === self.findIndex((c) => c.code === course.code)
+  );
+
+  return uniqueCourses;
 }
 
 interface ArticulationCourse {
@@ -516,78 +554,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: "Failed to fetch articulation details" });
     }
   });
-
-  function parseArticulationData(data: any): any[] {
-    const courses: any[] = [];
-    
-    try {
-      const result = data?.result;
-      if (!result) return courses;
-
-      const templateAssets = result.templateAssets;
-      if (!templateAssets) return courses;
-
-      let assets: any[];
-      if (typeof templateAssets === "string") {
-        assets = JSON.parse(templateAssets);
-      } else {
-        assets = templateAssets;
-      }
-
-      for (const asset of assets) {
-        if (asset.type === "RequirementGroup" && asset.sections) {
-          for (const section of asset.sections) {
-            if (section.rows) {
-              for (const row of section.rows) {
-                if (row.cells) {
-                  for (const cell of row.cells) {
-                    if (cell.type === "Course" && cell.course) {
-                      const course = cell.course;
-                      if (course.courseTitle && course.courseNumber) {
-                        courses.push({
-                          id: `${course.prefix || ""}${course.courseNumber}`,
-                          code: `${course.prefix || ""} ${course.courseNumber}`.trim(),
-                          title: course.courseTitle,
-                          units: course.maxUnits || course.minUnits || 3,
-                          department: course.department || course.prefixDescription || "",
-                          transferable: true,
-                          source: "ASSIST",
-                        });
-                      }
-                    }
-                    if (cell.courses && Array.isArray(cell.courses)) {
-                      for (const course of cell.courses) {
-                        if (course.courseTitle && course.courseNumber) {
-                          courses.push({
-                            id: `${course.prefix || ""}${course.courseNumber}`,
-                            code: `${course.prefix || ""} ${course.courseNumber}`.trim(),
-                            title: course.courseTitle,
-                            units: course.maxUnits || course.minUnits || 3,
-                            department: course.department || course.prefixDescription || "",
-                            transferable: true,
-                            source: "ASSIST",
-                          });
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    } catch (e) {
-      console.error("Error parsing articulation data:", e);
-    }
-
-    const uniqueCourses = courses.filter(
-      (course, index, self) =>
-        index === self.findIndex((c) => c.code === course.code)
-    );
-
-    return uniqueCourses;
-  }
 
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok", timestamp: new Date().toISOString() });

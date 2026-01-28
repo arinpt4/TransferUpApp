@@ -148,16 +148,14 @@ HTTP client utilities for API communication.
 
 ---
 
-## Animation Utilities
-
-### Spring Configuration (`client/lib/animations.ts`)
+## Animation Utilities (`client/lib/animations.ts`)
 
 Shared animation configuration for consistent micro-interactions.
 
 | Export | Description | Used By |
 |--------|-------------|---------|
-| `springConfig` | Standard spring animation config | Button, Card, CourseCard, ProgressBar |
-| `AnimatedPressable` | Pressable with Reanimated animations | Button, Card, CourseCard |
+| `springConfig` | Standard spring animation config (damping: 15, mass: 0.3, stiffness: 150) | Button, Card, CourseCard, ProgressBar |
+| `AnimatedPressable` | Pre-configured Animated Pressable component | Button, Card, CourseCard |
 
 ---
 
@@ -181,7 +179,8 @@ Shared animation configuration for consistent micro-interactions.
 | `fuzzyMatchScore(query, text)` | Fuzzy string matching for search |
 | `expandQueryWithAliases(query)` | Expands major abbreviations (CS -> Computer Science) |
 | `executeFunction(name, args)` | Executes AI tool calls |
-| `parseArticulationData(data)` | Parses ASSIST.org articulation response into courses |
+| `parseArticulationData(data)` | Parses ASSIST.org articulation response into full course objects |
+| `parseArticulationDataForChat(data)` | Wrapper that returns simplified course objects (code, title, units) |
 
 ### AI Tools (for chat function calling)
 

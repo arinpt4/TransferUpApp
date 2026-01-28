@@ -1,10 +1,9 @@
 import React from "react";
 import { StyleSheet, View, Pressable } from "react-native";
-import Animated, {
+import {
   useAnimatedStyle,
   useSharedValue,
   withSpring,
-  WithSpringConfig,
 } from "react-native-reanimated";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
@@ -12,6 +11,7 @@ import * as Haptics from "expo-haptics";
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius } from "@/constants/theme";
+import { springConfig, AnimatedPressable } from "@/lib/animations";
 import type { Course } from "@/lib/storage";
 
 interface CourseCardProps {
@@ -19,14 +19,6 @@ interface CourseCardProps {
   onPress?: () => void;
   onToggleComplete?: () => void;
 }
-
-const springConfig: WithSpringConfig = {
-  damping: 15,
-  mass: 0.3,
-  stiffness: 150,
-};
-
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 const categoryColors = {
   major: "#1E40AF",

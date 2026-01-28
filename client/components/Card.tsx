@@ -1,15 +1,15 @@
 import React from "react";
-import { StyleSheet, Pressable, ViewStyle } from "react-native";
-import Animated, {
+import { StyleSheet, ViewStyle } from "react-native";
+import {
   useAnimatedStyle,
   useSharedValue,
   withSpring,
-  WithSpringConfig,
 } from "react-native-reanimated";
 
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius } from "@/constants/theme";
+import { springConfig, AnimatedPressable } from "@/lib/animations";
 
 interface CardProps {
   elevation?: number;
@@ -19,14 +19,6 @@ interface CardProps {
   onPress?: () => void;
   style?: ViewStyle;
 }
-
-const springConfig: WithSpringConfig = {
-  damping: 15,
-  mass: 0.3,
-  stiffness: 150,
-  overshootClamping: true,
-  energyThreshold: 0.001,
-};
 
 const getBackgroundColorForElevation = (
   elevation: number,
@@ -43,8 +35,6 @@ const getBackgroundColorForElevation = (
       return theme.backgroundRoot;
   }
 };
-
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 export function Card({
   elevation = 1,
