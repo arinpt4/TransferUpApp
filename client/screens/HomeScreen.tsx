@@ -96,8 +96,8 @@ function GiantCircularProgress({
             <Stop offset="100%" stopColor="#3B82F6" />
           </SvgGradient>
           <RadialGradient id="innerGlow" cx="50%" cy="50%" r="50%">
-            <Stop offset="0%" stopColor={isDark ? "rgba(59, 130, 246, 0.15)" : "rgba(59, 130, 246, 0.08)"} />
-            <Stop offset="70%" stopColor={isDark ? "rgba(59, 130, 246, 0.05)" : "rgba(59, 130, 246, 0.02)"} />
+            <Stop offset="0%" stopColor={isDark ? "rgba(59, 130, 246, 0.06)" : "rgba(59, 130, 246, 0.04)"} />
+            <Stop offset="60%" stopColor={isDark ? "rgba(59, 130, 246, 0.02)" : "rgba(59, 130, 246, 0.01)"} />
             <Stop offset="100%" stopColor="transparent" />
           </RadialGradient>
         </Defs>
