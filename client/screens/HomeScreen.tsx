@@ -84,16 +84,12 @@ function GiantCircularProgress({
   }));
 
   const bgCircleColor = isDark ? "#1E293B" : "#CBD5E1";
-  const glowOpacity = isDark ? 0.12 : 0.08;
 
   return (
     <Animated.View style={[styles.giantRingContainer, animatedContainerStyle]}>
-      <View 
-        style={[
-          styles.giantRingGlow, 
-          { backgroundColor: `rgba(59, 130, 246, ${glowOpacity})` }
-        ]} 
-      />
+      <View style={styles.glowOuter} />
+      <View style={styles.glowMiddle} />
+      <View style={styles.glowInner} />
       <Svg width={GIANT_RING_SIZE} height={GIANT_RING_SIZE}>
         <Defs>
           <SvgGradient id="blueGradient" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -576,11 +572,26 @@ const styles = StyleSheet.create({
     height: GIANT_RING_SIZE,
     alignSelf: "center",
   },
-  giantRingGlow: {
+  glowOuter: {
     position: "absolute",
-    width: GIANT_RING_SIZE - 40,
-    height: GIANT_RING_SIZE - 40,
-    borderRadius: (GIANT_RING_SIZE - 40) / 2,
+    width: GIANT_RING_SIZE + 40,
+    height: GIANT_RING_SIZE + 40,
+    borderRadius: (GIANT_RING_SIZE + 40) / 2,
+    backgroundColor: "rgba(59, 130, 246, 0.03)",
+  },
+  glowMiddle: {
+    position: "absolute",
+    width: GIANT_RING_SIZE + 10,
+    height: GIANT_RING_SIZE + 10,
+    borderRadius: (GIANT_RING_SIZE + 10) / 2,
+    backgroundColor: "rgba(59, 130, 246, 0.05)",
+  },
+  glowInner: {
+    position: "absolute",
+    width: GIANT_RING_SIZE - 20,
+    height: GIANT_RING_SIZE - 20,
+    borderRadius: (GIANT_RING_SIZE - 20) / 2,
+    backgroundColor: "rgba(59, 130, 246, 0.04)",
   },
   giantRingCenter: {
     position: "absolute",
