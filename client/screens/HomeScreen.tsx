@@ -38,9 +38,11 @@ import {
   getSemesters,
   getQuarters,
   getRoadmapMode,
+  getCachedInstitutions,
   type UserProfile,
   type Course,
   type Semester,
+  type Institution,
 } from "@/lib/storage";
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
@@ -330,16 +332,21 @@ export default function HomeScreen() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [courses, setCourses] = useState<Course[]>([]);
   const [periods, setPeriods] = useState<Semester[]>([]);
+  const [institutions, setInstitutions] = useState<Institution[]>([]);
   const [refreshing, setRefreshing] = useState(false);
 
   const loadData = useCallback(async () => {
-    const [userProfile, userCourses, mode] = await Promise.all([
+    const [userProfile, userCourses, mode, cachedInstitutions] = await Promise.all([
       getUserProfile(),
       getCourses(),
       getRoadmapMode(),
+      getCachedInstitutions(),
     ]);
     setProfile(userProfile);
     setCourses(userCourses);
+    if (cachedInstitutions) {
+      setInstitutions(cachedInstitutions);
+    }
 
     const userPeriods = mode === "quarter" ? await getQuarters() : await getSemesters();
     setPeriods(userPeriods);
@@ -372,7 +379,20 @@ export default function HomeScreen() {
 
   const displayName = profile?.name || "Student";
   const ccName = profile?.communityCollegeName || "Community College";
-  const targetUni = "Target University";
+  
+  const getTargetUniversityName = () => {
+    const targetIds = profile?.targetUniversityIds || [];
+    if (targetIds.length === 0) return "Select a Target";
+    const targetInstitution = institutions.find((i) => i.id === targetIds[0]);
+    if (targetInstitution) {
+      if (targetIds.length > 1) {
+        return `${targetInstitution.name} +${targetIds.length - 1}`;
+      }
+      return targetInstitution.name;
+    }
+    return "Target University";
+  };
+  const targetUni = getTargetUniversityName();
 
   const getPeriodForCourse = (course: Course) => {
     return periods.find((p) => p.id === course.semesterId);

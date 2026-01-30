@@ -8,6 +8,7 @@ import {
   Switch,
   Platform,
   Alert,
+  KeyboardAvoidingView,
 } from "react-native";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
@@ -282,7 +283,10 @@ export default function ProfileScreen() {
         transparent
         onRequestClose={() => setShowEditModal(false)}
       >
-        <View style={styles.modalOverlay}>
+        <KeyboardAvoidingView 
+          style={styles.modalOverlay}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+        >
           <ThemedView style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <ThemedText type="h3">Edit Profile</ThemedText>
@@ -308,6 +312,7 @@ export default function ProfileScreen() {
                 placeholderTextColor={theme.textSecondary}
                 value={editName}
                 onChangeText={setEditName}
+                autoFocus
               />
             </View>
 
@@ -315,7 +320,7 @@ export default function ProfileScreen() {
               Save Changes
             </Button>
           </ThemedView>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
 
     </KeyboardAwareScrollViewCompat>
