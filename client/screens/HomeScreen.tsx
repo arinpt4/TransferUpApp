@@ -87,9 +87,7 @@ function GiantCircularProgress({
 
   return (
     <Animated.View style={[styles.giantRingContainer, animatedContainerStyle]}>
-      <View style={styles.glowOuter} />
-      <View style={styles.glowMiddle} />
-      <View style={styles.glowInner} />
+      <View style={styles.glowEffect} />
       <Svg width={GIANT_RING_SIZE} height={GIANT_RING_SIZE}>
         <Defs>
           <SvgGradient id="blueGradient" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -572,26 +570,17 @@ const styles = StyleSheet.create({
     height: GIANT_RING_SIZE,
     alignSelf: "center",
   },
-  glowOuter: {
+  glowEffect: {
     position: "absolute",
-    width: GIANT_RING_SIZE + 60,
-    height: GIANT_RING_SIZE + 60,
-    borderRadius: (GIANT_RING_SIZE + 60) / 2,
-    backgroundColor: "rgba(59, 130, 246, 0.06)",
-  },
-  glowMiddle: {
-    position: "absolute",
-    width: GIANT_RING_SIZE + 20,
-    height: GIANT_RING_SIZE + 20,
-    borderRadius: (GIANT_RING_SIZE + 20) / 2,
-    backgroundColor: "rgba(59, 130, 246, 0.10)",
-  },
-  glowInner: {
-    position: "absolute",
-    width: GIANT_RING_SIZE - 20,
-    height: GIANT_RING_SIZE - 20,
-    borderRadius: (GIANT_RING_SIZE - 20) / 2,
-    backgroundColor: "rgba(59, 130, 246, 0.08)",
+    width: GIANT_RING_SIZE - 32,
+    height: GIANT_RING_SIZE - 32,
+    borderRadius: (GIANT_RING_SIZE - 32) / 2,
+    backgroundColor: "rgba(59, 130, 246, 0.03)",
+    shadowColor: "#60A5FA",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 50,
+    elevation: 25,
   },
   giantRingCenter: {
     position: "absolute",
