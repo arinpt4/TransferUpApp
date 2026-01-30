@@ -90,9 +90,10 @@ function GiantCircularProgress({
       <View style={styles.glowEffect} />
       <Svg width={GIANT_RING_SIZE} height={GIANT_RING_SIZE}>
         <Defs>
-          <SvgGradient id="blueGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-            <Stop offset="0%" stopColor="#60A5FA" />
-            <Stop offset="100%" stopColor="#3B82F6" />
+          <SvgGradient id="blueGradient" x1="100%" y1="0%" x2="0%" y2="100%">
+            <Stop offset="0%" stopColor="#1D4ED8" />
+            <Stop offset="50%" stopColor="#3B82F6" />
+            <Stop offset="100%" stopColor="#93C5FD" />
           </SvgGradient>
         </Defs>
         <Circle
