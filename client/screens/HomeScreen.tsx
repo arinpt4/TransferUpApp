@@ -84,9 +84,16 @@ function GiantCircularProgress({
   }));
 
   const bgCircleColor = isDark ? "#1E293B" : "#CBD5E1";
+  const glowOpacity = isDark ? 0.12 : 0.08;
 
   return (
     <Animated.View style={[styles.giantRingContainer, animatedContainerStyle]}>
+      <View 
+        style={[
+          styles.giantRingGlow, 
+          { backgroundColor: `rgba(59, 130, 246, ${glowOpacity})` }
+        ]} 
+      />
       <Svg width={GIANT_RING_SIZE} height={GIANT_RING_SIZE}>
         <Defs>
           <SvgGradient id="blueGradient" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -565,19 +572,33 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginBottom: Spacing["xl"],
     marginTop: Spacing.md,
+    width: GIANT_RING_SIZE,
+    height: GIANT_RING_SIZE,
+    alignSelf: "center",
+  },
+  giantRingGlow: {
+    position: "absolute",
+    width: GIANT_RING_SIZE - 40,
+    height: GIANT_RING_SIZE - 40,
+    borderRadius: (GIANT_RING_SIZE - 40) / 2,
   },
   giantRingCenter: {
     position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     alignItems: "center",
     justifyContent: "center",
   },
   giantRingPercent: {
-    fontSize: 48,
+    fontSize: 44,
     fontWeight: "700",
+    lineHeight: 52,
   },
   giantRingLabel: {
     fontSize: 14,
-    marginTop: 4,
+    marginTop: 2,
   },
   miniStatsRow: {
     flexDirection: "row",
