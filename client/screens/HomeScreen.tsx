@@ -49,7 +49,7 @@ const GIANT_RING_SIZE = 240;
 const GIANT_RING_STROKE = 16;
 const GIANT_RING_RADIUS = (GIANT_RING_SIZE - GIANT_RING_STROKE) / 2;
 const GIANT_RING_CIRCUMFERENCE = 2 * Math.PI * GIANT_RING_RADIUS;
-const INNER_GLOW_RADIUS = GIANT_RING_RADIUS - GIANT_RING_STROKE / 2 - 8;
+const INNER_GLOW_RADIUS = 60;
 
 function GiantCircularProgress({ 
   progress, 
@@ -96,8 +96,8 @@ function GiantCircularProgress({
             <Stop offset="100%" stopColor="#3B82F6" />
           </SvgGradient>
           <RadialGradient id="innerGlow" cx="50%" cy="50%" r="50%">
-            <Stop offset="0%" stopColor={isDark ? "rgba(59, 130, 246, 0.06)" : "rgba(59, 130, 246, 0.04)"} />
-            <Stop offset="60%" stopColor={isDark ? "rgba(59, 130, 246, 0.02)" : "rgba(59, 130, 246, 0.01)"} />
+            <Stop offset="0%" stopColor={isDark ? "rgba(59, 130, 246, 0.025)" : "rgba(59, 130, 246, 0.015)"} />
+            <Stop offset="80%" stopColor="transparent" />
             <Stop offset="100%" stopColor="transparent" />
           </RadialGradient>
         </Defs>
