@@ -15,12 +15,19 @@ import * as Haptics from "expo-haptics";
 import Animated, {
   FadeInDown,
   FadeInUp,
+  FadeIn,
+  ZoomIn,
+  SlideInRight,
   useSharedValue,
   useAnimatedProps,
+  useAnimatedStyle,
   withTiming,
+  withSpring,
+  withDelay,
   Easing,
+  interpolate,
 } from "react-native-reanimated";
-import Svg, { Circle, Defs, LinearGradient as SvgGradient, Stop } from "react-native-svg";
+import Svg, { Circle, Defs, LinearGradient as SvgGradient, Stop, RadialGradient } from "react-native-svg";
 
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
@@ -38,10 +45,11 @@ import {
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
-const GIANT_RING_SIZE = 256;
-const GIANT_RING_STROKE = 14;
+const GIANT_RING_SIZE = 240;
+const GIANT_RING_STROKE = 16;
 const GIANT_RING_RADIUS = (GIANT_RING_SIZE - GIANT_RING_STROKE) / 2;
 const GIANT_RING_CIRCUMFERENCE = 2 * Math.PI * GIANT_RING_RADIUS;
+const INNER_GLOW_RADIUS = GIANT_RING_RADIUS - GIANT_RING_STROKE / 2 - 8;
 
 function GiantCircularProgress({ 
   progress, 
@@ -53,12 +61,17 @@ function GiantCircularProgress({
   isDark: boolean;
 }) {
   const animatedProgress = useSharedValue(0);
+  const scaleValue = useSharedValue(0.8);
 
   useEffect(() => {
-    animatedProgress.value = withTiming(progress, {
-      duration: 1500,
-      easing: Easing.bezier(0.25, 0.1, 0.25, 1),
-    });
+    scaleValue.value = withSpring(1, { damping: 12, stiffness: 100 });
+    animatedProgress.value = withDelay(
+      300,
+      withTiming(progress, {
+        duration: 1500,
+        easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+      })
+    );
   }, [progress]);
 
   const animatedProps = useAnimatedProps(() => {
@@ -66,19 +79,34 @@ function GiantCircularProgress({
     return { strokeDashoffset };
   });
 
-  const bgCircleColor = isDark ? "#334155" : "#E2E8F0";
-  const glowColor = isDark ? "rgba(59, 130, 246, 0.2)" : "rgba(59, 130, 246, 0.15)";
+  const animatedContainerStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scaleValue.value }],
+    opacity: interpolate(scaleValue.value, [0.8, 1], [0, 1]),
+  }));
+
+  const bgCircleColor = isDark ? "#1E293B" : "#CBD5E1";
+  const innerGlowColor = isDark ? "rgba(59, 130, 246, 0.08)" : "rgba(59, 130, 246, 0.05)";
 
   return (
-    <View style={styles.giantRingContainer}>
-      <View style={[styles.giantRingGlow, { backgroundColor: glowColor }]} />
+    <Animated.View style={[styles.giantRingContainer, animatedContainerStyle]}>
       <Svg width={GIANT_RING_SIZE} height={GIANT_RING_SIZE}>
         <Defs>
           <SvgGradient id="blueGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-            <Stop offset="0%" stopColor="#3B82F6" />
-            <Stop offset="100%" stopColor="#2563EB" />
+            <Stop offset="0%" stopColor="#60A5FA" />
+            <Stop offset="100%" stopColor="#3B82F6" />
           </SvgGradient>
+          <RadialGradient id="innerGlow" cx="50%" cy="50%" r="50%">
+            <Stop offset="0%" stopColor={isDark ? "rgba(59, 130, 246, 0.15)" : "rgba(59, 130, 246, 0.08)"} />
+            <Stop offset="70%" stopColor={isDark ? "rgba(59, 130, 246, 0.05)" : "rgba(59, 130, 246, 0.02)"} />
+            <Stop offset="100%" stopColor="transparent" />
+          </RadialGradient>
         </Defs>
+        <Circle
+          cx={GIANT_RING_SIZE / 2}
+          cy={GIANT_RING_SIZE / 2}
+          r={INNER_GLOW_RADIUS}
+          fill="url(#innerGlow)"
+        />
         <Circle
           cx={GIANT_RING_SIZE / 2}
           cy={GIANT_RING_SIZE / 2}
@@ -109,7 +137,7 @@ function GiantCircularProgress({
           Complete
         </ThemedText>
       </View>
-    </View>
+    </Animated.View>
   );
 }
 
@@ -383,7 +411,7 @@ export default function HomeScreen() {
     <ScrollView
       style={[styles.container, { backgroundColor: theme.backgroundRoot }]}
       contentContainerStyle={{
-        paddingTop: headerHeight + Spacing.lg,
+        paddingTop: headerHeight + Spacing["2xl"],
         paddingBottom: tabBarHeight + Spacing["3xl"],
         paddingHorizontal: Spacing.lg,
       }}
@@ -392,7 +420,10 @@ export default function HomeScreen() {
       }
       showsVerticalScrollIndicator={false}
     >
-      <Animated.View entering={FadeInUp.duration(500)} style={styles.header}>
+      <Animated.View 
+        entering={FadeIn.delay(100).duration(600)} 
+        style={styles.header}
+      >
         <View style={styles.headerTextContainer}>
           <ThemedText style={[styles.greeting, { color: theme.text }]}>
             Hey, {displayName}
@@ -401,33 +432,36 @@ export default function HomeScreen() {
             {ccName} → {targetUni}
           </ThemedText>
         </View>
-        <Pressable
-          style={[
-            styles.settingsButton,
-            {
-              backgroundColor: isDark ? "#0F172A" : "#F1F5F9",
-              borderColor: theme.border,
-            },
-          ]}
-          onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            (navigation as any).navigate("ProfileTab");
-          }}
-        >
-          <Feather name="settings" size={20} color={theme.textSecondary} />
-        </Pressable>
+        <Animated.View entering={ZoomIn.delay(200).duration(400)}>
+          <Pressable
+            style={[
+              styles.settingsButton,
+              {
+                backgroundColor: isDark ? "#0F172A" : "#F1F5F9",
+                borderColor: theme.border,
+              },
+            ]}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              (navigation as any).navigate("ProfileTab");
+            }}
+          >
+            <Feather name="settings" size={20} color={theme.textSecondary} />
+          </Pressable>
+        </Animated.View>
       </Animated.View>
 
-      <Animated.View entering={FadeInDown.delay(100).duration(600)}>
-        <GiantCircularProgress progress={progress} theme={theme} isDark={isDark} />
-      </Animated.View>
+      <GiantCircularProgress progress={progress} theme={theme} isDark={isDark} />
 
-      <View style={styles.miniStatsRow}>
+      <Animated.View 
+        entering={FadeInDown.delay(400).duration(500)} 
+        style={styles.miniStatsRow}
+      >
         <MiniStatCard
           label="Units Done"
           value={completedUnits}
           valueColor={theme.text}
-          delay={200}
+          delay={450}
           theme={theme}
           isDark={isDark}
         />
@@ -435,7 +469,7 @@ export default function HomeScreen() {
           label="Current GPA"
           value={calculateGPA()}
           valueColor="#34D399"
-          delay={250}
+          delay={500}
           theme={theme}
           isDark={isDark}
         />
@@ -443,15 +477,15 @@ export default function HomeScreen() {
           label="Remaining"
           value={remainingUnits}
           valueColor={theme.primary}
-          delay={300}
+          delay={550}
           theme={theme}
           isDark={isDark}
         />
-      </View>
+      </Animated.View>
 
       {upcomingCourses.length > 0 ? (
         <>
-          <Animated.View entering={FadeInDown.delay(350).duration(400)}>
+          <Animated.View entering={FadeInDown.delay(600).duration(400)}>
             <ThemedText style={[styles.sectionTitle, { color: theme.textSecondary }]}>
               Coming Up
             </ThemedText>
@@ -463,7 +497,7 @@ export default function HomeScreen() {
                 key={course.id}
                 course={course}
                 period={getPeriodForCourse(course)}
-                delay={400 + index * 50}
+                delay={650 + index * 80}
                 theme={theme}
                 isDark={isDark}
               />
@@ -472,7 +506,7 @@ export default function HomeScreen() {
         </>
       ) : null}
 
-      <Animated.View entering={FadeInDown.delay(550).duration(400)}>
+      <Animated.View entering={FadeInDown.delay(850).duration(400)}>
         <ThemedText style={[styles.sectionTitle, { color: theme.textSecondary }]}>
           Quick Actions
         </ThemedText>
@@ -484,7 +518,7 @@ export default function HomeScreen() {
           label="Requirements"
           description="View transfer requirements"
           onPress={() => (navigation as any).navigate("SchoolsTab")}
-          delay={600}
+          delay={900}
           isDark={isDark}
         />
         <QuickActionButton
@@ -492,7 +526,7 @@ export default function HomeScreen() {
           label="Ask Advisor"
           description="Get AI transfer guidance"
           onPress={() => (navigation as any).navigate("AlertsTab")}
-          delay={650}
+          delay={980}
           isDark={isDark}
         />
         <QuickActionButton
@@ -500,7 +534,7 @@ export default function HomeScreen() {
           label="GPA Calculator"
           description="Calculate your GPA"
           onPress={() => (navigation as any).navigate("GPACalculator")}
-          delay={700}
+          delay={1060}
           isDark={isDark}
         />
       </View>
@@ -524,10 +558,12 @@ const styles = StyleSheet.create({
   greeting: {
     fontSize: 28,
     fontWeight: "600",
-    marginBottom: 4,
+    lineHeight: 36,
+    marginBottom: 6,
   },
   subtitle: {
     fontSize: 14,
+    lineHeight: 20,
   },
   settingsButton: {
     width: 48,
@@ -540,14 +576,8 @@ const styles = StyleSheet.create({
   giantRingContainer: {
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: Spacing["2xl"],
-    position: "relative",
-  },
-  giantRingGlow: {
-    position: "absolute",
-    width: GIANT_RING_SIZE + 80,
-    height: GIANT_RING_SIZE + 80,
-    borderRadius: (GIANT_RING_SIZE + 80) / 2,
+    marginBottom: Spacing["xl"],
+    marginTop: Spacing.md,
   },
   giantRingCenter: {
     position: "absolute",
