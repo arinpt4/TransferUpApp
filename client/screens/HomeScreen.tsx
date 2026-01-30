@@ -4,297 +4,246 @@ import {
   View,
   Pressable,
   RefreshControl,
-  Platform,
+  ScrollView,
 } from "react-native";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useNavigation } from "@react-navigation/native";
-import { Ionicons } from "@expo/vector-icons";
-import { BlurView } from "expo-blur";
+import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import * as Haptics from "expo-haptics";
 import Animated, {
   FadeInDown,
   FadeInUp,
   useSharedValue,
   useAnimatedProps,
   withTiming,
-  withSpring,
   Easing,
   runOnJS,
 } from "react-native-reanimated";
 import Svg, { Circle, Defs, LinearGradient as SvgGradient, Stop } from "react-native-svg";
 
-import { KeyboardAwareScrollViewCompat } from "@/components/KeyboardAwareScrollViewCompat";
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
-import { Colors } from "@/constants/theme";
-import { Spacing, BorderRadius } from "@/constants/theme";
+import { Spacing, BorderRadius, Shadows } from "@/constants/theme";
 import {
   getUserProfile,
   getCourses,
+  getSemesters,
+  getQuarters,
+  getRoadmapMode,
   type UserProfile,
   type Course,
+  type Semester,
 } from "@/lib/storage";
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
-const RING_SIZE = 120;
-const RING_STROKE_WIDTH = 12;
-const RING_RADIUS = (RING_SIZE - RING_STROKE_WIDTH) / 2;
-const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
+const GIANT_RING_SIZE = 256;
+const GIANT_RING_STROKE = 12;
+const GIANT_RING_RADIUS = (GIANT_RING_SIZE - GIANT_RING_STROKE) / 2;
+const GIANT_RING_CIRCUMFERENCE = 2 * Math.PI * GIANT_RING_RADIUS;
 
-function CircularProgress({ progress, theme, isDark }: { progress: number; theme: any; isDark: boolean }) {
+function GiantCircularProgress({ progress, theme }: { progress: number; theme: any }) {
   const animatedProgress = useSharedValue(0);
 
   useEffect(() => {
     animatedProgress.value = withTiming(progress, {
-      duration: 1200,
+      duration: 1500,
       easing: Easing.bezier(0.25, 0.1, 0.25, 1),
     });
   }, [progress]);
 
   const animatedProps = useAnimatedProps(() => {
-    const strokeDashoffset = RING_CIRCUMFERENCE * (1 - animatedProgress.value);
-    return {
-      strokeDashoffset,
-    };
+    const strokeDashoffset = GIANT_RING_CIRCUMFERENCE * (1 - animatedProgress.value);
+    return { strokeDashoffset };
   });
 
   return (
-    <View style={styles.ringContainer}>
-      <Svg width={RING_SIZE} height={RING_SIZE}>
+    <View style={styles.giantRingContainer}>
+      <View style={styles.giantRingGlow} />
+      <Svg width={GIANT_RING_SIZE} height={GIANT_RING_SIZE}>
         <Defs>
-          <SvgGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-            <Stop offset="0%" stopColor="#F59E0B" />
-            <Stop offset="100%" stopColor="#EA580C" />
+          <SvgGradient id="blueGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <Stop offset="0%" stopColor="#3B82F6" />
+            <Stop offset="100%" stopColor="#2563EB" />
           </SvgGradient>
         </Defs>
         <Circle
-          cx={RING_SIZE / 2}
-          cy={RING_SIZE / 2}
-          r={RING_RADIUS}
-          stroke={isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"}
-          strokeWidth={RING_STROKE_WIDTH}
+          cx={GIANT_RING_SIZE / 2}
+          cy={GIANT_RING_SIZE / 2}
+          r={GIANT_RING_RADIUS}
+          stroke="#1E293B"
+          strokeWidth={GIANT_RING_STROKE}
           fill="transparent"
         />
         <AnimatedCircle
-          cx={RING_SIZE / 2}
-          cy={RING_SIZE / 2}
-          r={RING_RADIUS}
-          stroke="url(#progressGradient)"
-          strokeWidth={RING_STROKE_WIDTH}
+          cx={GIANT_RING_SIZE / 2}
+          cy={GIANT_RING_SIZE / 2}
+          r={GIANT_RING_RADIUS}
+          stroke="url(#blueGradient)"
+          strokeWidth={GIANT_RING_STROKE}
           fill="transparent"
-          strokeDasharray={RING_CIRCUMFERENCE}
+          strokeDasharray={GIANT_RING_CIRCUMFERENCE}
           animatedProps={animatedProps}
           strokeLinecap="round"
           rotation={-90}
-          origin={`${RING_SIZE / 2}, ${RING_SIZE / 2}`}
+          origin={`${GIANT_RING_SIZE / 2}, ${GIANT_RING_SIZE / 2}`}
         />
       </Svg>
-      <View style={styles.ringCenter}>
-        <ThemedText type="h2" style={[styles.ringPercent, { color: theme.primary }]}>
+      <View style={styles.giantRingCenter}>
+        <ThemedText style={styles.giantRingPercent}>
           {Math.round(progress * 100)}%
         </ThemedText>
+        <ThemedText style={styles.giantRingLabel}>Complete</ThemedText>
       </View>
     </View>
   );
 }
 
-function AnimatedCounter({ value, color, suffix = "" }: { value: number; color: string; suffix?: string }) {
-  const [displayValue, setDisplayValue] = useState(0);
-  const animatedValue = useSharedValue(0);
-
-  const updateDisplay = useCallback((val: number) => {
-    setDisplayValue(Math.round(val));
-  }, []);
-
-  useEffect(() => {
-    animatedValue.value = withTiming(value, {
-      duration: 800,
-      easing: Easing.out(Easing.quad),
-    }, () => {
-      runOnJS(updateDisplay)(value);
-    });
-
-    const interval = setInterval(() => {
-      const current = animatedValue.value;
-      if (current < value) {
-        setDisplayValue(Math.round(current));
-      }
-    }, 50);
-
-    return () => clearInterval(interval);
-  }, [value]);
-
-  return (
-    <ThemedText type="h2" style={{ color, fontFamily: "Nunito_700Bold" }}>
-      {displayValue}{suffix}
-    </ThemedText>
-  );
-}
-
-function StatCard({
-  icon,
+function MiniStatCard({
   label,
   value,
-  color,
-  gradientColors,
+  valueColor,
   delay,
-  theme,
-  isDark,
-  suffix = "",
 }: {
-  icon: keyof typeof Ionicons.glyphMap;
   label: string;
-  value: number;
-  color: string;
-  gradientColors: [string, string];
+  value: string | number;
+  valueColor: string;
   delay: number;
-  theme: any;
-  isDark: boolean;
-  suffix?: string;
 }) {
   return (
     <Animated.View
       entering={FadeInDown.delay(delay).duration(400).springify()}
-      style={styles.statCardWrapper}
+      style={styles.miniStatCard}
     >
-      <LinearGradient
-        colors={gradientColors}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={[styles.statCard, { borderColor: isDark ? `${color}30` : `${color}40` }]}
-      >
-        <View style={[styles.statIconContainer, { backgroundColor: `${color}20` }]}>
-          <Ionicons name={icon} size={20} color={color} />
-        </View>
-        <AnimatedCounter value={value} color={theme.text} suffix={suffix} />
-        <ThemedText
-          type="small"
-          style={[styles.statLabel, { color: theme.textSecondary, fontFamily: "Nunito_400Regular" }]}
-        >
-          {label}
-        </ThemedText>
-      </LinearGradient>
+      <ThemedText style={[styles.miniStatValue, { color: valueColor }]}>
+        {value}
+      </ThemedText>
+      <ThemedText style={styles.miniStatLabel}>{label}</ThemedText>
     </Animated.View>
   );
 }
 
-function QuickActionCard({
-  icon,
-  label,
-  gradientColors,
-  onPress,
+function CourseCard({
+  course,
+  period,
   delay,
   theme,
 }: {
-  icon: keyof typeof Ionicons.glyphMap;
-  label: string;
-  gradientColors: [string, string];
-  onPress: () => void;
+  course: Course;
+  period?: Semester;
   delay: number;
   theme: any;
 }) {
+  const isInProgress = course.status === "in_progress";
+  const isPlanned = course.status === "planned" || !course.status;
+
   return (
     <Animated.View
-      entering={FadeInDown.delay(delay).duration(400).springify()}
-      style={styles.quickActionWrapper}
+      entering={FadeInDown.delay(delay).duration(400)}
+      style={styles.courseCard}
     >
+      <View style={styles.courseCardRow}>
+        <View
+          style={[
+            styles.courseIconContainer,
+            isInProgress
+              ? styles.courseIconInProgress
+              : styles.courseIconPlanned,
+          ]}
+        >
+          <Feather
+            name="book-open"
+            size={20}
+            color={isInProgress ? "#FFFFFF" : "#64748B"}
+          />
+        </View>
+        <View style={styles.courseCardContent}>
+          <View style={styles.courseCardHeader}>
+            <ThemedText style={styles.courseCode}>{course.code}</ThemedText>
+            <View
+              style={[
+                styles.statusBadge,
+                isInProgress ? styles.statusBadgeInProgress : styles.statusBadgePlanned,
+              ]}
+            >
+              <ThemedText
+                style={[
+                  styles.statusBadgeText,
+                  { color: isInProgress ? "#60A5FA" : "#64748B" },
+                ]}
+              >
+                {isInProgress ? "In Progress" : "Planned"}
+              </ThemedText>
+            </View>
+          </View>
+          <ThemedText style={styles.courseTitle} numberOfLines={1}>
+            {course.title}
+          </ThemedText>
+          <View style={styles.courseCardFooter}>
+            <ThemedText style={styles.courseUnits}>{course.units} units</ThemedText>
+            {isInProgress ? (
+              <View style={styles.progressBarContainer}>
+                <LinearGradient
+                  colors={["#3B82F6", "#2563EB"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={[styles.progressBarFill, { width: "50%" }]}
+                />
+              </View>
+            ) : period ? (
+              <ThemedText style={styles.coursePeriod}>{period.name}</ThemedText>
+            ) : null}
+          </View>
+        </View>
+      </View>
+    </Animated.View>
+  );
+}
+
+function QuickActionButton({
+  icon,
+  label,
+  description,
+  onPress,
+  delay,
+}: {
+  icon: keyof typeof Feather.glyphMap;
+  label: string;
+  description: string;
+  onPress: () => void;
+  delay: number;
+}) {
+  return (
+    <Animated.View entering={FadeInDown.delay(delay).duration(400).springify()}>
       <Pressable
-        onPress={onPress}
+        onPress={() => {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          onPress();
+        }}
         style={({ pressed }) => [
-          styles.quickActionPressable,
-          {
-            opacity: pressed ? 0.8 : 1,
-            transform: [{ scale: pressed ? 0.96 : 1 }],
-          },
+          styles.quickActionButton,
+          { transform: [{ scale: pressed ? 0.98 : 1 }] },
         ]}
       >
         <LinearGradient
-          colors={gradientColors}
+          colors={["#2563EB", "#1D4ED8"]}
           start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={[styles.quickActionCard, { borderColor: theme.border }]}
+          end={{ x: 1, y: 0 }}
+          style={styles.quickActionGradient}
         >
-          <View style={[styles.quickActionIconBg, { backgroundColor: "rgba(255,255,255,0.15)" }]}>
-            <Ionicons name={icon} size={24} color="#FFFFFF" />
+          <View style={styles.quickActionIconContainer}>
+            <Feather name={icon} size={20} color="#FFFFFF" />
           </View>
-          <ThemedText
-            type="small"
-            style={[styles.quickActionLabel, { color: "#FFFFFF", fontFamily: "Nunito_600SemiBold" }]}
-          >
-            {label}
-          </ThemedText>
+          <View style={styles.quickActionTextContainer}>
+            <ThemedText style={styles.quickActionLabel}>{label}</ThemedText>
+            <ThemedText style={styles.quickActionDescription}>{description}</ThemedText>
+          </View>
+          <Feather name="chevron-right" size={20} color="#93C5FD" />
         </LinearGradient>
       </Pressable>
     </Animated.View>
-  );
-}
-
-function RecentActivityItem({
-  course,
-  delay,
-  theme,
-  isLast,
-}: {
-  course: Course;
-  delay: number;
-  theme: any;
-  isLast: boolean;
-}) {
-  return (
-    <Animated.View
-      entering={FadeInDown.delay(delay).duration(300)}
-      style={[
-        styles.activityItem,
-        !isLast && { borderBottomWidth: 1, borderBottomColor: theme.border },
-      ]}
-    >
-      <View style={[styles.activityDot, { backgroundColor: theme.primary }]} />
-      <View style={styles.activityContent}>
-        <ThemedText
-          type="body"
-          numberOfLines={1}
-          style={{ fontFamily: "Nunito_600SemiBold" }}
-        >
-          {course.code}
-        </ThemedText>
-        <ThemedText
-          type="small"
-          numberOfLines={1}
-          style={{ color: theme.textSecondary, fontFamily: "Nunito_400Regular" }}
-        >
-          {course.title}
-        </ThemedText>
-      </View>
-      <View style={styles.activityUnits}>
-        <ThemedText type="small" style={{ color: theme.primary, fontFamily: "Nunito_600SemiBold" }}>
-          {course.units} units
-        </ThemedText>
-      </View>
-    </Animated.View>
-  );
-}
-
-function EmptyActivityState({ theme }: { theme: any }) {
-  return (
-    <View style={styles.emptyState}>
-      <View style={[styles.emptyIconContainer, { backgroundColor: `${theme.primary}15` }]}>
-        <Ionicons name="albums-outline" size={32} color={theme.primary} />
-      </View>
-      <ThemedText
-        type="body"
-        style={[styles.emptyText, { color: theme.textSecondary, fontFamily: "Nunito_400Regular" }]}
-      >
-        No courses added yet
-      </ThemedText>
-      <ThemedText
-        type="small"
-        style={{ color: theme.textSecondary, textAlign: "center", fontFamily: "Nunito_400Regular" }}
-      >
-        Add courses from transfer requirements to see them here
-      </ThemedText>
-    </View>
   );
 }
 
@@ -306,25 +255,30 @@ export default function HomeScreen() {
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [courses, setCourses] = useState<Course[]>([]);
+  const [periods, setPeriods] = useState<Semester[]>([]);
   const [refreshing, setRefreshing] = useState(false);
 
-  const loadData = async () => {
-    const [userProfile, userCourses] = await Promise.all([
+  const loadData = useCallback(async () => {
+    const [userProfile, userCourses, mode] = await Promise.all([
       getUserProfile(),
       getCourses(),
+      getRoadmapMode(),
     ]);
     setProfile(userProfile);
     setCourses(userCourses);
-  };
+
+    const userPeriods = mode === "quarter" ? await getQuarters() : await getSemesters();
+    setPeriods(userPeriods);
+  }, []);
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [loadData]);
 
   useEffect(() => {
     const unsubscribe = navigation.addListener("focus", loadData);
     return unsubscribe;
-  }, [navigation]);
+  }, [navigation, loadData]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -332,377 +286,363 @@ export default function HomeScreen() {
     setRefreshing(false);
   };
 
-  const completedCourses = courses.filter((c) => c.completed);
+  const completedCourses = courses.filter((c) => c.completed || c.status === "taken");
   const totalUnits = courses.reduce((sum, c) => sum + c.units, 0);
   const completedUnits = completedCourses.reduce((sum, c) => sum + c.units, 0);
+  const remainingUnits = totalUnits - completedUnits;
   const progress = totalUnits > 0 ? completedUnits / totalUnits : 0;
-  const recentCourses = courses.slice(-3).reverse();
 
-  const greeting = getGreeting();
+  const upcomingCourses = courses
+    .filter((c) => c.status === "in_progress" || c.status === "planned" || !c.status)
+    .slice(0, 3);
+
   const displayName = profile?.name || "Student";
-  const motivationalMessage = getMotivationalMessage(progress);
+  const ccName = profile?.communityCollegeName || "Community College";
+  const targetUni = "Target University";
+
+  const getPeriodForCourse = (course: Course) => {
+    return periods.find((p) => p.id === course.semesterId);
+  };
+
+  const calculateGPA = () => {
+    const gradePoints: Record<string, number> = {
+      "A+": 4.0, "A": 4.0, "A-": 3.7,
+      "B+": 3.3, "B": 3.0, "B-": 2.7,
+      "C+": 2.3, "C": 2.0, "C-": 1.7,
+      "D+": 1.3, "D": 1.0, "D-": 0.7,
+      "F": 0.0,
+    };
+    const gradedCourses = courses.filter((c) => c.grade && gradePoints[c.grade] !== undefined);
+    if (gradedCourses.length === 0) return "N/A";
+    const totalPoints = gradedCourses.reduce(
+      (sum, c) => sum + (gradePoints[c.grade!] || 0) * c.units,
+      0
+    );
+    const totalUnits = gradedCourses.reduce((sum, c) => sum + c.units, 0);
+    return (totalPoints / totalUnits).toFixed(2);
+  };
 
   return (
-    <KeyboardAwareScrollViewCompat
-      style={{ flex: 1, backgroundColor: theme.backgroundRoot }}
+    <ScrollView
+      style={styles.container}
       contentContainerStyle={{
-        paddingTop: headerHeight + Spacing.xl,
-        paddingBottom: tabBarHeight + Spacing["2xl"],
+        paddingTop: headerHeight + Spacing.lg,
+        paddingBottom: tabBarHeight + Spacing["3xl"],
         paddingHorizontal: Spacing.lg,
       }}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.primary} />
       }
+      showsVerticalScrollIndicator={false}
     >
-      <Animated.View entering={FadeInUp.delay(0).duration(500)}>
-        <ThemedText type="h2" style={[styles.greeting, { fontFamily: "Nunito_700Bold" }]}>
-          {greeting}, {displayName}
-        </ThemedText>
-        <ThemedText
-          type="body"
-          style={[styles.subGreeting, { color: theme.textSecondary, fontFamily: "Nunito_400Regular" }]}
-        >
-          {motivationalMessage}
-        </ThemedText>
-      </Animated.View>
-
-      <Animated.View entering={FadeInDown.delay(100).duration(500)}>
-        <View style={styles.progressCardOuter}>
-          {Platform.OS === "ios" ? (
-            <BlurView intensity={40} tint={isDark ? "dark" : "light"} style={styles.progressCardBlur}>
-              <ProgressCardContent
-                progress={progress}
-                theme={theme}
-                isDark={isDark}
-                completedCourses={completedCourses.length}
-                completedUnits={completedUnits}
-                totalUnits={totalUnits}
-                remainingCourses={courses.length - completedCourses.length}
-              />
-            </BlurView>
-          ) : (
-            <View style={[styles.progressCardFallback, { backgroundColor: isDark ? "rgba(30, 41, 59, 0.9)" : "rgba(255, 255, 255, 0.95)" }]}>
-              <ProgressCardContent
-                progress={progress}
-                theme={theme}
-                isDark={isDark}
-                completedCourses={completedCourses.length}
-                completedUnits={completedUnits}
-                totalUnits={totalUnits}
-                remainingCourses={courses.length - completedCourses.length}
-              />
-            </View>
-          )}
+      <Animated.View entering={FadeInUp.duration(500)} style={styles.header}>
+        <View style={styles.headerTextContainer}>
+          <ThemedText style={styles.greeting}>Hey, {displayName}</ThemedText>
+          <ThemedText style={styles.subtitle}>
+            {ccName} → {targetUni}
+          </ThemedText>
         </View>
+        <Pressable
+          style={styles.settingsButton}
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            (navigation as any).navigate("ProfileTab");
+          }}
+        >
+          <Feather name="settings" size={20} color="#94A3B8" />
+        </Pressable>
       </Animated.View>
 
-      <View style={styles.statCardsRow}>
-        <StatCard
-          icon="checkmark-circle"
-          label="Completed"
-          value={completedCourses.length}
-          color={theme.success}
-          gradientColors={isDark ? ["rgba(16, 185, 129, 0.15)", "rgba(16, 185, 129, 0.05)"] : ["rgba(16, 185, 129, 0.12)", "rgba(16, 185, 129, 0.04)"]}
-          delay={200}
-          theme={theme}
-          isDark={isDark}
-        />
-        <StatCard
-          icon="book"
+      <Animated.View entering={FadeInDown.delay(100).duration(600)}>
+        <GiantCircularProgress progress={progress} theme={theme} />
+      </Animated.View>
+
+      <View style={styles.miniStatsRow}>
+        <MiniStatCard
           label="Units Done"
           value={completedUnits}
-          color={theme.primary}
-          gradientColors={isDark ? ["rgba(245, 158, 11, 0.15)", "rgba(245, 158, 11, 0.05)"] : ["rgba(245, 158, 11, 0.12)", "rgba(245, 158, 11, 0.04)"]}
+          valueColor="#FFFFFF"
+          delay={200}
+        />
+        <MiniStatCard
+          label="Current GPA"
+          value={calculateGPA()}
+          valueColor="#34D399"
           delay={250}
-          theme={theme}
-          isDark={isDark}
         />
-        <StatCard
-          icon="time"
+        <MiniStatCard
           label="Remaining"
-          value={courses.length - completedCourses.length}
-          color={theme.secondary}
-          gradientColors={isDark ? ["rgba(59, 130, 246, 0.15)", "rgba(59, 130, 246, 0.05)"] : ["rgba(30, 64, 175, 0.12)", "rgba(30, 64, 175, 0.04)"]}
+          value={remainingUnits}
+          valueColor="#60A5FA"
           delay={300}
-          theme={theme}
-          isDark={isDark}
         />
       </View>
 
-      <Animated.View entering={FadeInDown.delay(350).duration(400)}>
-        <ThemedText
-          type="h3"
-          style={[styles.sectionTitle, { fontFamily: "Nunito_700Bold" }]}
-        >
-          Quick Actions
-        </ThemedText>
-      </Animated.View>
+      {upcomingCourses.length > 0 ? (
+        <>
+          <Animated.View entering={FadeInDown.delay(350).duration(400)}>
+            <ThemedText style={styles.sectionTitle}>Coming Up</ThemedText>
+          </Animated.View>
 
-      <View style={styles.quickActionsGrid}>
-        <QuickActionCard
-          icon="add-circle"
-          label="Add Courses"
-          gradientColors={["#F59E0B", "#EA580C"]}
-          onPress={() => (navigation as any).navigate("RoadmapTab")}
-          delay={400}
-          theme={theme}
-        />
-        <QuickActionCard
-          icon="school"
-          label="Requirements"
-          gradientColors={["#1E40AF", "#3B82F6"]}
-          onPress={() => (navigation as any).navigate("SchoolsTab")}
-          delay={450}
-          theme={theme}
-        />
-        <QuickActionCard
-          icon="chatbubble-ellipses"
-          label="Ask Advisor"
-          gradientColors={["#7C3AED", "#A855F7"]}
-          onPress={() => (navigation as any).navigate("AlertsTab")}
-          delay={500}
-          theme={theme}
-        />
-        <QuickActionCard
-          icon="calculator"
-          label="GPA Calc"
-          gradientColors={["#10B981", "#34D399"]}
-          onPress={() => (navigation as any).navigate("GPACalculator")}
-          delay={550}
-          theme={theme}
-        />
-      </View>
-
-      <Animated.View entering={FadeInDown.delay(600).duration(400)}>
-        <ThemedText
-          type="h3"
-          style={[styles.sectionTitle, { fontFamily: "Nunito_700Bold" }]}
-        >
-          Recent Activity
-        </ThemedText>
-      </Animated.View>
-
-      <Animated.View entering={FadeInDown.delay(650).duration(400)}>
-        <View style={[styles.activityCard, { backgroundColor: isDark ? "rgba(30, 41, 59, 0.6)" : theme.backgroundDefault, borderColor: theme.border }]}>
-          {recentCourses.length > 0 ? (
-            recentCourses.map((course, index) => (
-              <RecentActivityItem
+          <View style={styles.coursesContainer}>
+            {upcomingCourses.map((course, index) => (
+              <CourseCard
                 key={course.id}
                 course={course}
-                delay={700 + index * 50}
+                period={getPeriodForCourse(course)}
+                delay={400 + index * 50}
                 theme={theme}
-                isLast={index === recentCourses.length - 1}
               />
-            ))
-          ) : (
-            <EmptyActivityState theme={theme} />
-          )}
-        </View>
+            ))}
+          </View>
+        </>
+      ) : null}
+
+      <Animated.View entering={FadeInDown.delay(550).duration(400)}>
+        <ThemedText style={styles.sectionTitle}>Quick Actions</ThemedText>
       </Animated.View>
-    </KeyboardAwareScrollViewCompat>
-  );
-}
 
-function ProgressCardContent({
-  progress,
-  theme,
-  isDark,
-  completedCourses,
-  completedUnits,
-  totalUnits,
-  remainingCourses,
-}: {
-  progress: number;
-  theme: any;
-  isDark: boolean;
-  completedCourses: number;
-  completedUnits: number;
-  totalUnits: number;
-  remainingCourses: number;
-}) {
-  return (
-    <View style={styles.progressCardContent}>
-      <View style={styles.progressCardHeader}>
-        <View>
-          <ThemedText type="h3" style={{ fontFamily: "Nunito_700Bold" }}>
-            Transfer Progress
-          </ThemedText>
-          <ThemedText
-            type="small"
-            style={{ color: theme.textSecondary, marginTop: 4, fontFamily: "Nunito_400Regular" }}
-          >
-            {completedUnits} of {totalUnits} units complete
-          </ThemedText>
-        </View>
-        <CircularProgress progress={progress} theme={theme} isDark={isDark} />
+      <View style={styles.quickActionsContainer}>
+        <QuickActionButton
+          icon="file-text"
+          label="Requirements"
+          description="View transfer requirements"
+          onPress={() => (navigation as any).navigate("SchoolsTab")}
+          delay={600}
+        />
+        <QuickActionButton
+          icon="message-circle"
+          label="Ask Advisor"
+          description="Get AI transfer guidance"
+          onPress={() => (navigation as any).navigate("AlertsTab")}
+          delay={650}
+        />
+        <QuickActionButton
+          icon="bar-chart-2"
+          label="GPA Calculator"
+          description="Calculate your GPA"
+          onPress={() => (navigation as any).navigate("GPACalculator")}
+          delay={700}
+        />
       </View>
-    </View>
+    </ScrollView>
   );
-}
-
-function getGreeting(): string {
-  const hour = new Date().getHours();
-  if (hour < 12) return "Good morning";
-  if (hour < 17) return "Good afternoon";
-  return "Good evening";
-}
-
-function getMotivationalMessage(progress: number): string {
-  if (progress === 0) return "Let's start planning your transfer journey!";
-  if (progress < 0.25) return "Great start! Keep building momentum.";
-  if (progress < 0.5) return "You're making solid progress!";
-  if (progress < 0.75) return "Keep it up! Over halfway there.";
-  if (progress < 1) return "Almost there! The finish line is in sight.";
-  return "Congratulations! You've completed your courses!";
 }
 
 const styles = StyleSheet.create({
-  greeting: {
-    marginBottom: Spacing.xs,
+  container: {
+    flex: 1,
+    backgroundColor: "#020617",
   },
-  subGreeting: {
-    marginBottom: Spacing["2xl"],
-  },
-  progressCardOuter: {
-    marginBottom: Spacing.xl,
-    borderRadius: BorderRadius.xl,
-    overflow: "hidden",
-    shadowColor: "#F59E0B",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 8,
-  },
-  progressCardBlur: {
-    borderRadius: BorderRadius.xl,
-    borderWidth: 1,
-    borderColor: "rgba(0,0,0,0.1)",
-    overflow: "hidden",
-  },
-  progressCardFallback: {
-    borderRadius: BorderRadius.xl,
-    borderWidth: 1,
-    borderColor: "rgba(0,0,0,0.1)",
-  },
-  progressCardContent: {
-    padding: Spacing.xl,
-  },
-  progressCardHeader: {
+  header: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
+    alignItems: "flex-start",
+    marginBottom: Spacing["2xl"],
   },
-  ringContainer: {
-    width: RING_SIZE,
-    height: RING_SIZE,
+  headerTextContainer: {
+    flex: 1,
+  },
+  greeting: {
+    fontSize: 28,
+    fontWeight: "600",
+    color: "#FFFFFF",
+    marginBottom: 4,
+  },
+  subtitle: {
+    fontSize: 14,
+    color: "#64748B",
+  },
+  settingsButton: {
+    width: 48,
+    height: 48,
+    borderRadius: BorderRadius.xl,
+    backgroundColor: "#0F172A",
+    borderWidth: 1,
+    borderColor: "#1E293B",
     alignItems: "center",
     justifyContent: "center",
   },
-  ringCenter: {
+  giantRingContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: Spacing["2xl"],
+    position: "relative",
+  },
+  giantRingGlow: {
+    position: "absolute",
+    width: GIANT_RING_SIZE + 60,
+    height: GIANT_RING_SIZE + 60,
+    borderRadius: (GIANT_RING_SIZE + 60) / 2,
+    backgroundColor: "rgba(59, 130, 246, 0.15)",
+  },
+  giantRingCenter: {
     position: "absolute",
     alignItems: "center",
     justifyContent: "center",
   },
-  ringPercent: {
+  giantRingPercent: {
+    fontSize: 48,
+    fontWeight: "700",
+    color: "#60A5FA",
+  },
+  giantRingLabel: {
+    fontSize: 14,
+    color: "#94A3B8",
+    marginTop: 4,
+  },
+  miniStatsRow: {
+    flexDirection: "row",
+    gap: Spacing.sm,
+    marginBottom: Spacing["2xl"],
+  },
+  miniStatCard: {
+    flex: 1,
+    backgroundColor: "rgba(15, 23, 42, 0.5)",
+    borderWidth: 1,
+    borderColor: "#1E293B",
+    borderRadius: BorderRadius.xl,
+    padding: Spacing.lg,
+    alignItems: "center",
+  },
+  miniStatValue: {
+    fontSize: 24,
     fontWeight: "700",
   },
-  statCardsRow: {
-    flexDirection: "row",
-    gap: Spacing.sm,
-    marginBottom: Spacing["2xl"],
-  },
-  statCardWrapper: {
-    flex: 1,
-  },
-  statCard: {
-    alignItems: "center",
-    padding: Spacing.lg,
-    borderRadius: BorderRadius.lg,
-    borderWidth: 1,
-  },
-  statIconContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: BorderRadius.full,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: Spacing.sm,
-  },
-  statLabel: {
-    marginTop: Spacing.xs,
-    textAlign: "center",
+  miniStatLabel: {
+    fontSize: 12,
+    color: "#94A3B8",
+    marginTop: 4,
   },
   sectionTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#94A3B8",
     marginBottom: Spacing.md,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
-  quickActionsGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: Spacing.sm,
+  coursesContainer: {
+    gap: Spacing.md,
     marginBottom: Spacing["2xl"],
   },
-  quickActionWrapper: {
-    width: "48%",
-    flexGrow: 1,
+  courseCard: {
+    backgroundColor: "#0F172A",
+    borderWidth: 1,
+    borderColor: "#1E293B",
+    borderRadius: BorderRadius.xl,
+    padding: Spacing.lg,
   },
-  quickActionPressable: {
+  courseCardRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+  },
+  courseIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: BorderRadius.md,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: Spacing.md,
+  },
+  courseIconInProgress: {
+    backgroundColor: "#2563EB",
+  },
+  courseIconPlanned: {
+    backgroundColor: "#1E293B",
+  },
+  courseCardContent: {
     flex: 1,
   },
-  quickActionCard: {
-    padding: Spacing.lg,
-    borderRadius: BorderRadius.lg,
+  courseCardHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
-    borderWidth: 1,
-    minHeight: 100,
-    justifyContent: "center",
+    marginBottom: 4,
   },
-  quickActionIconBg: {
-    width: 44,
-    height: 44,
+  courseCode: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#FFFFFF",
+  },
+  statusBadge: {
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 2,
     borderRadius: BorderRadius.full,
-    alignItems: "center",
-    justifyContent: "center",
+  },
+  statusBadgeInProgress: {
+    backgroundColor: "rgba(59, 130, 246, 0.1)",
+  },
+  statusBadgePlanned: {
+    backgroundColor: "#1E293B",
+  },
+  statusBadgeText: {
+    fontSize: 12,
+    fontWeight: "500",
+  },
+  courseTitle: {
+    fontSize: 14,
+    color: "#94A3B8",
     marginBottom: Spacing.sm,
   },
-  quickActionLabel: {
-    fontWeight: "600",
-    textAlign: "center",
+  courseCardFooter: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
-  activityCard: {
-    borderRadius: BorderRadius.lg,
-    borderWidth: 1,
+  courseUnits: {
+    fontSize: 12,
+    color: "#64748B",
+  },
+  coursePeriod: {
+    fontSize: 12,
+    color: "#64748B",
+  },
+  progressBarContainer: {
+    flex: 1,
+    height: 4,
+    backgroundColor: "#1E293B",
+    borderRadius: 2,
+    marginLeft: Spacing.md,
     overflow: "hidden",
   },
-  activityItem: {
+  progressBarFill: {
+    height: "100%",
+    borderRadius: 2,
+  },
+  quickActionsContainer: {
+    gap: Spacing.md,
+  },
+  quickActionButton: {
+    borderRadius: BorderRadius.xl,
+    overflow: "hidden",
+    ...Shadows.blue,
+  },
+  quickActionGradient: {
     flexDirection: "row",
     alignItems: "center",
     padding: Spacing.lg,
   },
-  activityDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginRight: Spacing.md,
-  },
-  activityContent: {
-    flex: 1,
-  },
-  activityUnits: {
-    marginLeft: Spacing.sm,
-  },
-  emptyState: {
-    alignItems: "center",
-    padding: Spacing["2xl"],
-  },
-  emptyIconContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: BorderRadius.full,
+  quickActionIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: BorderRadius.md,
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: Spacing.md,
+    marginRight: Spacing.md,
   },
-  emptyText: {
-    marginBottom: Spacing.xs,
+  quickActionTextContainer: {
+    flex: 1,
+  },
+  quickActionLabel: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#FFFFFF",
+  },
+  quickActionDescription: {
+    fontSize: 12,
+    color: "#93C5FD",
+    marginTop: 2,
   },
 });

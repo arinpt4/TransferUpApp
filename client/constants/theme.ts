@@ -1,49 +1,68 @@
 import { Platform } from "react-native";
 
+// New Blue/Slate Color Palette - Source of Truth for entire app
+// Background: slate-950 (almost black)
+// Cards: slate-900 with slate-800 border
+// Primary accent: Blue (#3b82f6 to #2563eb gradients)
+// Success/GPA: Emerald green (emerald-400)
+// Text: white for primary, slate-400 for secondary, slate-500 for tertiary
+
 export const Colors = {
   light: {
-    text: "#111827",
-    textSecondary: "#6B7280",
+    text: "#0F172A", // slate-900
+    textSecondary: "#64748B", // slate-500
+    textTertiary: "#94A3B8", // slate-400
     buttonText: "#FFFFFF",
-    tabIconDefault: "#6B7280",
-    tabIconSelected: "#F59E0B",
-    link: "#F59E0B",
-    linkPressed: "#D97706",
-    backgroundRoot: "#FFFFFF",
-    backgroundDefault: "#F9FAFB",
-    backgroundSecondary: "#F3F4F6",
-    backgroundTertiary: "#E5E7EB",
-    border: "#E5E7EB",
-    primary: "#F59E0B",
-    primaryDark: "#D97706",
-    secondary: "#1E40AF",
-    success: "#10B981",
-    warning: "#F59E0B",
-    error: "#EF4444",
-    amber: "#F59E0B",
-    blue: "#1E40AF",
+    tabIconDefault: "#64748B",
+    tabIconSelected: "#3B82F6", // blue-500
+    link: "#3B82F6",
+    linkPressed: "#2563EB", // blue-600
+    backgroundRoot: "#F8FAFC", // slate-50
+    backgroundDefault: "#F1F5F9", // slate-100
+    backgroundSecondary: "#E2E8F0", // slate-200
+    backgroundTertiary: "#CBD5E1", // slate-300
+    border: "#E2E8F0", // slate-200
+    primary: "#3B82F6", // blue-500
+    primaryDark: "#2563EB", // blue-600
+    primaryLight: "#60A5FA", // blue-400
+    secondary: "#1E40AF", // blue-800
+    success: "#10B981", // emerald-500
+    successLight: "#34D399", // emerald-400
+    warning: "#F59E0B", // amber-500
+    error: "#EF4444", // red-500
+    blue: "#3B82F6",
+    blueGradientStart: "#3B82F6", // blue-500
+    blueGradientEnd: "#2563EB", // blue-600
+    cardBackground: "#FFFFFF",
+    cardBorder: "#E2E8F0",
   },
   dark: {
-    text: "#F9FAFB",
-    textSecondary: "#9CA3AF",
+    text: "#F8FAFC", // slate-50
+    textSecondary: "#94A3B8", // slate-400
+    textTertiary: "#64748B", // slate-500
     buttonText: "#FFFFFF",
-    tabIconDefault: "#6B7280",
-    tabIconSelected: "#F59E0B",
-    link: "#F59E0B",
-    linkPressed: "#FBBF24",
-    backgroundRoot: "#111827",
-    backgroundDefault: "#1F2937",
-    backgroundSecondary: "#374151",
-    backgroundTertiary: "#4B5563",
-    border: "#374151",
-    primary: "#F59E0B",
-    primaryDark: "#D97706",
-    secondary: "#3B82F6",
-    success: "#10B981",
-    warning: "#F59E0B",
-    error: "#EF4444",
-    amber: "#F59E0B",
+    tabIconDefault: "#64748B",
+    tabIconSelected: "#3B82F6", // blue-500
+    link: "#60A5FA", // blue-400
+    linkPressed: "#93C5FD", // blue-300
+    backgroundRoot: "#020617", // slate-950
+    backgroundDefault: "#0F172A", // slate-900
+    backgroundSecondary: "#1E293B", // slate-800
+    backgroundTertiary: "#334155", // slate-700
+    border: "#1E293B", // slate-800
+    primary: "#3B82F6", // blue-500
+    primaryDark: "#2563EB", // blue-600
+    primaryLight: "#60A5FA", // blue-400
+    secondary: "#3B82F6", // blue-500
+    success: "#10B981", // emerald-500
+    successLight: "#34D399", // emerald-400
+    warning: "#F59E0B", // amber-500
+    error: "#EF4444", // red-500
     blue: "#3B82F6",
+    blueGradientStart: "#2563EB", // blue-600
+    blueGradientEnd: "#1D4ED8", // blue-700
+    cardBackground: "#0F172A", // slate-900
+    cardBorder: "#1E293B", // slate-800
   },
 };
 
@@ -158,6 +177,13 @@ export const Shadows = {
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  blue: {
+    shadowColor: "#1E3A8A",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 4,
   },

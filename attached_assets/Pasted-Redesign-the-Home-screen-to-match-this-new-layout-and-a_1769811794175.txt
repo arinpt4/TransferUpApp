@@ -1,0 +1,72 @@
+Redesign the Home screen to match this new layout and apply the blue color scheme throughout the entire app:
+
+HOME SCREEN LAYOUT:
+1. Header:
+   - "Hey, [username]" as main title (text-3xl font-semibold)
+   - Subtitle below: "[Community College] → [Target University]" (text-slate-500 text-sm)
+   - Settings button on the right (slate-900 bg, border-slate-800, rounded-2xl, 48x48px)
+   - Use w-12 h-12 for settings icon container
+
+2. Giant Circular Progress (center piece):
+   - Large SVG circle progress ring (256x256px)
+   - Background circle: text-slate-800, strokeWidth 12
+   - Progress circle: blue gradient (from #3b82f6 to #2563eb), strokeWidth 12
+   - Center text: percentage in text-5xl, gradient from blue-400 to blue-500
+   - "Complete" label below in text-slate-400
+   - Add outer glow effect: bg-gradient-to-r from-blue-500/20 to-blue-600/20 with blur-2xl
+
+3. Mini Stats (3 columns):
+   - Card style: bg-slate-900/50 border border-slate-800 rounded-2xl p-4
+   - First card: Units Done (white text)
+   - Second card: Current GPA (emerald-400 text) 
+   - Third card: Remaining (blue-400 text)
+   - All use text-2xl font-bold for numbers, text-xs text-slate-400 for labels
+
+4. Coming Up Section:
+   - Section title: "Coming Up" in text-sm font-semibold text-slate-400
+   - Course cards: bg-slate-900 border border-slate-800 rounded-2xl p-5
+   - In Progress courses:
+     * Icon: gradient from blue-600 to blue-700, 40x40px rounded-xl
+     * Badge: "In Progress" in text-blue-400 bg-blue-500/10 rounded-full
+     * Progress bar: gradient from blue-500 to blue-600
+     * Show course code, name, units
+   - Planned courses:
+     * Icon: bg-slate-800 with text-slate-500 icon
+     * Badge: "Planned" in text-slate-500 bg-slate-800
+     * Show semester/quarter instead of progress bar
+
+5. Quick Actions (bottom - thumb zone):
+   - All buttons: bg-gradient-to-r from-blue-600 to-blue-700 rounded-2xl p-5
+   - Shadow: shadow-lg shadow-blue-900/30
+   - Icon container: bg-white/10 rounded-xl 40x40px
+   - Active scale: active:scale-[0.98]
+   - Text color: text-blue-200 for descriptions
+   - Three buttons: Requirements, Ask Advisor, GPA Calculator
+
+COLOR SCHEME FOR ENTIRE APP:
+- Background: bg-slate-950 (almost black)
+- Cards: bg-slate-900 with border-slate-800
+- Primary accent: Blue (#3b82f6 to #2563eb gradients)
+- Success/GPA: Emerald green (emerald-400)
+- Text: white for primary, slate-400 for secondary, slate-500 for tertiary
+- Buttons: Blue gradient (from-blue-600 to-blue-700)
+- Shadows: shadow-blue-900/30 for blue elements
+
+APPLY THIS COLOR SCHEME TO ALL SCREENS:
+1. Roadmap screen: Use blue for semester/quarter toggle, blue for progress bars
+2. Schools screen: Use blue for selection indicators and buttons
+3. Transfer Requirements screen: Use blue for "Add to Roadmap" buttons and selection states
+4. Advisor chat screen: Use blue for send button and user message bubbles
+5. Profile/Settings screen: Use blue for active toggles and buttons
+6. GPA Calculator screen: Keep emerald green for GPA display, use blue for other buttons
+
+SPECIFIC UPDATES NEEDED:
+- Replace all purple, indigo, orange, yellow, teal colors with blue
+- Update all gradient buttons to use blue-600 to blue-700
+- Keep emerald green ONLY for GPA and success states
+- Use slate grays for backgrounds and borders
+- Ensure all cards use bg-slate-900 border border-slate-800
+- Update all progress indicators to use blue gradients
+- Make sure active states use blue-500/10 backgrounds with blue-400 text
+
+Test that the color scheme is consistent across ALL screens and that the Home screen matches the provided design exactly.
