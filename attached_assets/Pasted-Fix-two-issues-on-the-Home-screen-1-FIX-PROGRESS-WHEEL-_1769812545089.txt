@@ -1,0 +1,47 @@
+Fix two issues on the Home screen:
+
+1. FIX PROGRESS WHEEL APPEARANCE:
+   The circular progress ring doesn't look right. Update it to match the design:
+   
+   - The background circle should be more visible with better contrast
+   - Background circle color: Use a darker shade like #1e293b or #334155 (slate-700/slate-600)
+   - Increase the stroke width slightly if needed for better visibility
+   - The progress circle gradient should be vibrant blue (keep #3b82f6 to #2563eb)
+   - Ensure the outer glow effect is visible but subtle
+   - The circle should have proper spacing from the edges
+   - Make sure the SVG viewBox and dimensions are correct
+   - Test with different progress values (0%, 30%, 75%, 100%) to ensure it looks good
+
+   Current issue: The wheel looks flat or hard to see. It needs more depth and contrast.
+
+2. FIX LIGHT MODE ON HOME SCREEN:
+   The Home screen doesn't switch to light mode properly. Update the theme handling:
+   
+   Light mode colors should be:
+   - Background: bg-slate-50 or bg-white (instead of bg-slate-950)
+   - Text: text-slate-900 for primary (instead of white)
+   - Secondary text: text-slate-600 (instead of slate-400)
+   - Cards: bg-white with border-slate-200 (instead of slate-900/slate-800)
+   - Progress wheel background circle: Use slate-200 or slate-300
+   - Progress wheel stays blue (keep the blue gradient)
+   - Buttons: Keep blue gradient but maybe slightly lighter (from-blue-500 to-blue-600)
+   - GPA stat: Keep emerald green
+   - Settings button: bg-slate-100 border-slate-200 (instead of slate-900/slate-800)
+   
+   Apply the theme context/state to ALL Home screen components:
+   - Header and subtitle
+   - Progress wheel background
+   - All stat cards
+   - Coming Up section cards
+   - Quick action buttons
+   - Section titles
+   
+   Make sure the theme applies immediately when toggled from Settings and persists across app restarts.
+
+3. ENSURE PROPER CONTRAST:
+   - In dark mode: white text on dark backgrounds
+   - In light mode: dark text on light backgrounds
+   - Progress wheel should be clearly visible in both modes
+   - All text should be readable with proper contrast ratios
+
+Test both dark mode and light mode thoroughly to ensure everything looks correct.

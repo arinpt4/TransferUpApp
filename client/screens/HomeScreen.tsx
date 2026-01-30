@@ -19,7 +19,6 @@ import Animated, {
   useAnimatedProps,
   withTiming,
   Easing,
-  runOnJS,
 } from "react-native-reanimated";
 import Svg, { Circle, Defs, LinearGradient as SvgGradient, Stop } from "react-native-svg";
 
@@ -40,11 +39,19 @@ import {
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 const GIANT_RING_SIZE = 256;
-const GIANT_RING_STROKE = 12;
+const GIANT_RING_STROKE = 14;
 const GIANT_RING_RADIUS = (GIANT_RING_SIZE - GIANT_RING_STROKE) / 2;
 const GIANT_RING_CIRCUMFERENCE = 2 * Math.PI * GIANT_RING_RADIUS;
 
-function GiantCircularProgress({ progress, theme }: { progress: number; theme: any }) {
+function GiantCircularProgress({ 
+  progress, 
+  theme, 
+  isDark 
+}: { 
+  progress: number; 
+  theme: any;
+  isDark: boolean;
+}) {
   const animatedProgress = useSharedValue(0);
 
   useEffect(() => {
@@ -59,9 +66,12 @@ function GiantCircularProgress({ progress, theme }: { progress: number; theme: a
     return { strokeDashoffset };
   });
 
+  const bgCircleColor = isDark ? "#334155" : "#E2E8F0";
+  const glowColor = isDark ? "rgba(59, 130, 246, 0.2)" : "rgba(59, 130, 246, 0.15)";
+
   return (
     <View style={styles.giantRingContainer}>
-      <View style={styles.giantRingGlow} />
+      <View style={[styles.giantRingGlow, { backgroundColor: glowColor }]} />
       <Svg width={GIANT_RING_SIZE} height={GIANT_RING_SIZE}>
         <Defs>
           <SvgGradient id="blueGradient" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -73,7 +83,7 @@ function GiantCircularProgress({ progress, theme }: { progress: number; theme: a
           cx={GIANT_RING_SIZE / 2}
           cy={GIANT_RING_SIZE / 2}
           r={GIANT_RING_RADIUS}
-          stroke="#1E293B"
+          stroke={bgCircleColor}
           strokeWidth={GIANT_RING_STROKE}
           fill="transparent"
         />
@@ -92,10 +102,12 @@ function GiantCircularProgress({ progress, theme }: { progress: number; theme: a
         />
       </Svg>
       <View style={styles.giantRingCenter}>
-        <ThemedText style={styles.giantRingPercent}>
+        <ThemedText style={[styles.giantRingPercent, { color: theme.primary }]}>
           {Math.round(progress * 100)}%
         </ThemedText>
-        <ThemedText style={styles.giantRingLabel}>Complete</ThemedText>
+        <ThemedText style={[styles.giantRingLabel, { color: theme.textSecondary }]}>
+          Complete
+        </ThemedText>
       </View>
     </View>
   );
@@ -106,21 +118,33 @@ function MiniStatCard({
   value,
   valueColor,
   delay,
+  theme,
+  isDark,
 }: {
   label: string;
   value: string | number;
   valueColor: string;
   delay: number;
+  theme: any;
+  isDark: boolean;
 }) {
   return (
     <Animated.View
       entering={FadeInDown.delay(delay).duration(400).springify()}
-      style={styles.miniStatCard}
+      style={[
+        styles.miniStatCard,
+        {
+          backgroundColor: isDark ? "rgba(15, 23, 42, 0.5)" : "rgba(255, 255, 255, 0.9)",
+          borderColor: theme.border,
+        },
+      ]}
     >
       <ThemedText style={[styles.miniStatValue, { color: valueColor }]}>
         {value}
       </ThemedText>
-      <ThemedText style={styles.miniStatLabel}>{label}</ThemedText>
+      <ThemedText style={[styles.miniStatLabel, { color: theme.textSecondary }]}>
+        {label}
+      </ThemedText>
     </Animated.View>
   );
 }
@@ -130,61 +154,86 @@ function CourseCard({
   period,
   delay,
   theme,
+  isDark,
 }: {
   course: Course;
   period?: Semester;
   delay: number;
   theme: any;
+  isDark: boolean;
 }) {
   const isInProgress = course.status === "in_progress";
-  const isPlanned = course.status === "planned" || !course.status;
 
   return (
     <Animated.View
       entering={FadeInDown.delay(delay).duration(400)}
-      style={styles.courseCard}
+      style={[
+        styles.courseCard,
+        {
+          backgroundColor: isDark ? "#0F172A" : "#FFFFFF",
+          borderColor: theme.border,
+        },
+      ]}
     >
       <View style={styles.courseCardRow}>
         <View
           style={[
             styles.courseIconContainer,
-            isInProgress
-              ? styles.courseIconInProgress
-              : styles.courseIconPlanned,
+            {
+              backgroundColor: isInProgress 
+                ? theme.primary 
+                : isDark ? "#1E293B" : "#E2E8F0",
+            },
           ]}
         >
           <Feather
             name="book-open"
             size={20}
-            color={isInProgress ? "#FFFFFF" : "#64748B"}
+            color={isInProgress ? "#FFFFFF" : theme.textSecondary}
           />
         </View>
         <View style={styles.courseCardContent}>
           <View style={styles.courseCardHeader}>
-            <ThemedText style={styles.courseCode}>{course.code}</ThemedText>
+            <ThemedText style={[styles.courseCode, { color: theme.text }]}>
+              {course.code}
+            </ThemedText>
             <View
               style={[
                 styles.statusBadge,
-                isInProgress ? styles.statusBadgeInProgress : styles.statusBadgePlanned,
+                {
+                  backgroundColor: isInProgress 
+                    ? "rgba(59, 130, 246, 0.1)" 
+                    : isDark ? "#1E293B" : "#E2E8F0",
+                },
               ]}
             >
               <ThemedText
                 style={[
                   styles.statusBadgeText,
-                  { color: isInProgress ? "#60A5FA" : "#64748B" },
+                  { color: isInProgress ? "#60A5FA" : theme.textSecondary },
                 ]}
               >
                 {isInProgress ? "In Progress" : "Planned"}
               </ThemedText>
             </View>
           </View>
-          <ThemedText style={styles.courseTitle} numberOfLines={1}>
+          <ThemedText 
+            style={[styles.courseTitle, { color: theme.textSecondary }]} 
+            numberOfLines={1}
+          >
             {course.title}
           </ThemedText>
           <View style={styles.courseCardFooter}>
-            <ThemedText style={styles.courseUnits}>{course.units} units</ThemedText>
+            <ThemedText style={[styles.courseUnits, { color: theme.textTertiary }]}>
+              {course.units} units
+            </ThemedText>
             {isInProgress ? (
-              <View style={styles.progressBarContainer}>
+              <View 
+                style={[
+                  styles.progressBarContainer, 
+                  { backgroundColor: isDark ? "#1E293B" : "#E2E8F0" }
+                ]}
+              >
                 <LinearGradient
                   colors={["#3B82F6", "#2563EB"]}
                   start={{ x: 0, y: 0 }}
@@ -193,7 +242,9 @@ function CourseCard({
                 />
               </View>
             ) : period ? (
-              <ThemedText style={styles.coursePeriod}>{period.name}</ThemedText>
+              <ThemedText style={[styles.coursePeriod, { color: theme.textTertiary }]}>
+                {period.name}
+              </ThemedText>
             ) : null}
           </View>
         </View>
@@ -208,13 +259,19 @@ function QuickActionButton({
   description,
   onPress,
   delay,
+  isDark,
 }: {
   icon: keyof typeof Feather.glyphMap;
   label: string;
   description: string;
   onPress: () => void;
   delay: number;
+  isDark: boolean;
 }) {
+  const gradientColors: [string, string] = isDark 
+    ? ["#2563EB", "#1D4ED8"] 
+    : ["#3B82F6", "#2563EB"];
+
   return (
     <Animated.View entering={FadeInDown.delay(delay).duration(400).springify()}>
       <Pressable
@@ -228,7 +285,7 @@ function QuickActionButton({
         ]}
       >
         <LinearGradient
-          colors={["#2563EB", "#1D4ED8"]}
+          colors={gradientColors}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
           style={styles.quickActionGradient}
@@ -318,13 +375,13 @@ export default function HomeScreen() {
       (sum, c) => sum + (gradePoints[c.grade!] || 0) * c.units,
       0
     );
-    const totalUnits = gradedCourses.reduce((sum, c) => sum + c.units, 0);
-    return (totalPoints / totalUnits).toFixed(2);
+    const totalGradedUnits = gradedCourses.reduce((sum, c) => sum + c.units, 0);
+    return (totalPoints / totalGradedUnits).toFixed(2);
   };
 
   return (
     <ScrollView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: theme.backgroundRoot }]}
       contentContainerStyle={{
         paddingTop: headerHeight + Spacing.lg,
         paddingBottom: tabBarHeight + Spacing["3xl"],
@@ -337,51 +394,67 @@ export default function HomeScreen() {
     >
       <Animated.View entering={FadeInUp.duration(500)} style={styles.header}>
         <View style={styles.headerTextContainer}>
-          <ThemedText style={styles.greeting}>Hey, {displayName}</ThemedText>
-          <ThemedText style={styles.subtitle}>
+          <ThemedText style={[styles.greeting, { color: theme.text }]}>
+            Hey, {displayName}
+          </ThemedText>
+          <ThemedText style={[styles.subtitle, { color: theme.textSecondary }]}>
             {ccName} → {targetUni}
           </ThemedText>
         </View>
         <Pressable
-          style={styles.settingsButton}
+          style={[
+            styles.settingsButton,
+            {
+              backgroundColor: isDark ? "#0F172A" : "#F1F5F9",
+              borderColor: theme.border,
+            },
+          ]}
           onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
             (navigation as any).navigate("ProfileTab");
           }}
         >
-          <Feather name="settings" size={20} color="#94A3B8" />
+          <Feather name="settings" size={20} color={theme.textSecondary} />
         </Pressable>
       </Animated.View>
 
       <Animated.View entering={FadeInDown.delay(100).duration(600)}>
-        <GiantCircularProgress progress={progress} theme={theme} />
+        <GiantCircularProgress progress={progress} theme={theme} isDark={isDark} />
       </Animated.View>
 
       <View style={styles.miniStatsRow}>
         <MiniStatCard
           label="Units Done"
           value={completedUnits}
-          valueColor="#FFFFFF"
+          valueColor={theme.text}
           delay={200}
+          theme={theme}
+          isDark={isDark}
         />
         <MiniStatCard
           label="Current GPA"
           value={calculateGPA()}
           valueColor="#34D399"
           delay={250}
+          theme={theme}
+          isDark={isDark}
         />
         <MiniStatCard
           label="Remaining"
           value={remainingUnits}
-          valueColor="#60A5FA"
+          valueColor={theme.primary}
           delay={300}
+          theme={theme}
+          isDark={isDark}
         />
       </View>
 
       {upcomingCourses.length > 0 ? (
         <>
           <Animated.View entering={FadeInDown.delay(350).duration(400)}>
-            <ThemedText style={styles.sectionTitle}>Coming Up</ThemedText>
+            <ThemedText style={[styles.sectionTitle, { color: theme.textSecondary }]}>
+              Coming Up
+            </ThemedText>
           </Animated.View>
 
           <View style={styles.coursesContainer}>
@@ -392,6 +465,7 @@ export default function HomeScreen() {
                 period={getPeriodForCourse(course)}
                 delay={400 + index * 50}
                 theme={theme}
+                isDark={isDark}
               />
             ))}
           </View>
@@ -399,7 +473,9 @@ export default function HomeScreen() {
       ) : null}
 
       <Animated.View entering={FadeInDown.delay(550).duration(400)}>
-        <ThemedText style={styles.sectionTitle}>Quick Actions</ThemedText>
+        <ThemedText style={[styles.sectionTitle, { color: theme.textSecondary }]}>
+          Quick Actions
+        </ThemedText>
       </Animated.View>
 
       <View style={styles.quickActionsContainer}>
@@ -409,6 +485,7 @@ export default function HomeScreen() {
           description="View transfer requirements"
           onPress={() => (navigation as any).navigate("SchoolsTab")}
           delay={600}
+          isDark={isDark}
         />
         <QuickActionButton
           icon="message-circle"
@@ -416,6 +493,7 @@ export default function HomeScreen() {
           description="Get AI transfer guidance"
           onPress={() => (navigation as any).navigate("AlertsTab")}
           delay={650}
+          isDark={isDark}
         />
         <QuickActionButton
           icon="bar-chart-2"
@@ -423,6 +501,7 @@ export default function HomeScreen() {
           description="Calculate your GPA"
           onPress={() => (navigation as any).navigate("GPACalculator")}
           delay={700}
+          isDark={isDark}
         />
       </View>
     </ScrollView>
@@ -432,7 +511,6 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#020617",
   },
   header: {
     flexDirection: "row",
@@ -446,20 +524,16 @@ const styles = StyleSheet.create({
   greeting: {
     fontSize: 28,
     fontWeight: "600",
-    color: "#FFFFFF",
     marginBottom: 4,
   },
   subtitle: {
     fontSize: 14,
-    color: "#64748B",
   },
   settingsButton: {
     width: 48,
     height: 48,
     borderRadius: BorderRadius.xl,
-    backgroundColor: "#0F172A",
     borderWidth: 1,
-    borderColor: "#1E293B",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -471,10 +545,9 @@ const styles = StyleSheet.create({
   },
   giantRingGlow: {
     position: "absolute",
-    width: GIANT_RING_SIZE + 60,
-    height: GIANT_RING_SIZE + 60,
-    borderRadius: (GIANT_RING_SIZE + 60) / 2,
-    backgroundColor: "rgba(59, 130, 246, 0.15)",
+    width: GIANT_RING_SIZE + 80,
+    height: GIANT_RING_SIZE + 80,
+    borderRadius: (GIANT_RING_SIZE + 80) / 2,
   },
   giantRingCenter: {
     position: "absolute",
@@ -484,11 +557,9 @@ const styles = StyleSheet.create({
   giantRingPercent: {
     fontSize: 48,
     fontWeight: "700",
-    color: "#60A5FA",
   },
   giantRingLabel: {
     fontSize: 14,
-    color: "#94A3B8",
     marginTop: 4,
   },
   miniStatsRow: {
@@ -498,9 +569,7 @@ const styles = StyleSheet.create({
   },
   miniStatCard: {
     flex: 1,
-    backgroundColor: "rgba(15, 23, 42, 0.5)",
     borderWidth: 1,
-    borderColor: "#1E293B",
     borderRadius: BorderRadius.xl,
     padding: Spacing.lg,
     alignItems: "center",
@@ -511,13 +580,11 @@ const styles = StyleSheet.create({
   },
   miniStatLabel: {
     fontSize: 12,
-    color: "#94A3B8",
     marginTop: 4,
   },
   sectionTitle: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#94A3B8",
     marginBottom: Spacing.md,
     textTransform: "uppercase",
     letterSpacing: 0.5,
@@ -527,9 +594,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing["2xl"],
   },
   courseCard: {
-    backgroundColor: "#0F172A",
     borderWidth: 1,
-    borderColor: "#1E293B",
     borderRadius: BorderRadius.xl,
     padding: Spacing.lg,
   },
@@ -545,12 +610,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginRight: Spacing.md,
   },
-  courseIconInProgress: {
-    backgroundColor: "#2563EB",
-  },
-  courseIconPlanned: {
-    backgroundColor: "#1E293B",
-  },
   courseCardContent: {
     flex: 1,
   },
@@ -563,18 +622,11 @@ const styles = StyleSheet.create({
   courseCode: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#FFFFFF",
   },
   statusBadge: {
     paddingHorizontal: Spacing.sm,
     paddingVertical: 2,
     borderRadius: BorderRadius.full,
-  },
-  statusBadgeInProgress: {
-    backgroundColor: "rgba(59, 130, 246, 0.1)",
-  },
-  statusBadgePlanned: {
-    backgroundColor: "#1E293B",
   },
   statusBadgeText: {
     fontSize: 12,
@@ -582,7 +634,6 @@ const styles = StyleSheet.create({
   },
   courseTitle: {
     fontSize: 14,
-    color: "#94A3B8",
     marginBottom: Spacing.sm,
   },
   courseCardFooter: {
@@ -592,16 +643,13 @@ const styles = StyleSheet.create({
   },
   courseUnits: {
     fontSize: 12,
-    color: "#64748B",
   },
   coursePeriod: {
     fontSize: 12,
-    color: "#64748B",
   },
   progressBarContainer: {
     flex: 1,
     height: 4,
-    backgroundColor: "#1E293B",
     borderRadius: 2,
     marginLeft: Spacing.md,
     overflow: "hidden",
