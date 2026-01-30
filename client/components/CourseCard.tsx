@@ -21,9 +21,9 @@ interface CourseCardProps {
 }
 
 const categoryColors = {
-  major: "#1E40AF",
-  ge: "#059669",
-  elective: "#7C3AED",
+  major: "#3B82F6",
+  ge: "#10B981",
+  elective: "#60A5FA",
 };
 
 const categoryLabels = {
