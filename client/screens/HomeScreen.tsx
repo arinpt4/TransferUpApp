@@ -27,7 +27,7 @@ import Animated, {
   Easing,
   interpolate,
 } from "react-native-reanimated";
-import Svg, { Circle, Defs, LinearGradient as SvgGradient, Stop, RadialGradient } from "react-native-svg";
+import Svg, { Circle, Defs, LinearGradient as SvgGradient, Stop } from "react-native-svg";
 
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
@@ -49,7 +49,6 @@ const GIANT_RING_SIZE = 240;
 const GIANT_RING_STROKE = 16;
 const GIANT_RING_RADIUS = (GIANT_RING_SIZE - GIANT_RING_STROKE) / 2;
 const GIANT_RING_CIRCUMFERENCE = 2 * Math.PI * GIANT_RING_RADIUS;
-const INNER_GLOW_RADIUS = 60;
 
 function GiantCircularProgress({ 
   progress, 
@@ -85,7 +84,6 @@ function GiantCircularProgress({
   }));
 
   const bgCircleColor = isDark ? "#1E293B" : "#CBD5E1";
-  const innerGlowColor = isDark ? "rgba(59, 130, 246, 0.08)" : "rgba(59, 130, 246, 0.05)";
 
   return (
     <Animated.View style={[styles.giantRingContainer, animatedContainerStyle]}>
@@ -95,18 +93,7 @@ function GiantCircularProgress({
             <Stop offset="0%" stopColor="#60A5FA" />
             <Stop offset="100%" stopColor="#3B82F6" />
           </SvgGradient>
-          <RadialGradient id="innerGlow" cx="50%" cy="50%" r="50%">
-            <Stop offset="0%" stopColor={isDark ? "rgba(59, 130, 246, 0.025)" : "rgba(59, 130, 246, 0.015)"} />
-            <Stop offset="80%" stopColor="transparent" />
-            <Stop offset="100%" stopColor="transparent" />
-          </RadialGradient>
         </Defs>
-        <Circle
-          cx={GIANT_RING_SIZE / 2}
-          cy={GIANT_RING_SIZE / 2}
-          r={INNER_GLOW_RADIUS}
-          fill="url(#innerGlow)"
-        />
         <Circle
           cx={GIANT_RING_SIZE / 2}
           cy={GIANT_RING_SIZE / 2}
