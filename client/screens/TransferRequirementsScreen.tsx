@@ -86,7 +86,7 @@ export default function TransferRequirementsScreen() {
   const [loadingCourses, setLoadingCourses] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedAgreements, setSelectedAgreements] = useState<Set<string>>(new Set());
+  const [selectedCourses, setSelectedCourses] = useState<Set<string>>(new Set());
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedPeriodId, setSelectedPeriodId] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
@@ -172,19 +172,29 @@ export default function TransferRequirementsScreen() {
   const selectMajor = (major: Major) => {
     setSelectedMajor(major);
     setSearchQuery("");
-    setSelectedAgreements(new Set());
+    setSelectedCourses(new Set());
     loadCourses(major);
   };
 
-  const toggleAgreementSelection = (agreementId: string) => {
+  const getCourseKey = (agreementId: string, courseCode: string) => 
+    `${agreementId}:${courseCode}`;
+
+  const toggleCourseSelection = (agreementId: string, course: AssistCourse) => {
+    if (isCourseInRoadmap(course.code)) return;
+    
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    const newSelected = new Set(selectedAgreements);
-    if (newSelected.has(agreementId)) {
-      newSelected.delete(agreementId);
+    const key = getCourseKey(agreementId, course.code);
+    const newSelected = new Set(selectedCourses);
+    if (newSelected.has(key)) {
+      newSelected.delete(key);
     } else {
-      newSelected.add(agreementId);
+      newSelected.add(key);
     }
-    setSelectedAgreements(newSelected);
+    setSelectedCourses(newSelected);
+  };
+
+  const isCourseSelected = (agreementId: string, courseCode: string) => {
+    return selectedCourses.has(getCourseKey(agreementId, courseCode));
   };
 
   const isAgreementAlreadyAdded = (agreement: ArticulationAgreement) => {
@@ -200,33 +210,35 @@ export default function TransferRequirementsScreen() {
     );
   };
 
-  const addSelectedAgreements = async () => {
-    if (selectedAgreements.size === 0 || !selectedPeriodId) return;
+  const addSelectedCourses = async () => {
+    if (selectedCourses.size === 0 || !selectedPeriodId) return;
 
     await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
     const newCourses: Course[] = [];
-    for (const agreementId of selectedAgreements) {
+    for (const courseKey of selectedCourses) {
+      const [agreementId, courseCode] = courseKey.split(":");
       const agreement = agreements.find((a) => a.id === agreementId);
-      if (agreement && agreement.sendingCourses.length > 0) {
-        for (const sendingCourse of agreement.sendingCourses) {
-          if (!isCourseInRoadmap(sendingCourse.code)) {
-            const receivingInfo = agreement.receivingCourses
-              .map((rc) => rc.code)
-              .join(", ");
-            newCourses.push({
-              id: generateId(),
-              code: sendingCourse.code,
-              title: sendingCourse.title,
-              units: sendingCourse.units,
-              semesterId: selectedPeriodId,
-              completed: false,
-              category: "major",
-              transferable: true,
-              status: "planned",
-              notes: `Satisfies ${receivingName}: ${receivingInfo}`,
-            });
-          }
+      if (agreement) {
+        const sendingCourse = agreement.sendingCourses.find(
+          (sc) => sc.code === courseCode
+        );
+        if (sendingCourse && !isCourseInRoadmap(sendingCourse.code)) {
+          const receivingInfo = agreement.receivingCourses
+            .map((rc) => rc.code)
+            .join(", ");
+          newCourses.push({
+            id: generateId(),
+            code: sendingCourse.code,
+            title: sendingCourse.title,
+            units: sendingCourse.units,
+            semesterId: selectedPeriodId,
+            completed: false,
+            category: "major",
+            transferable: true,
+            status: "planned",
+            notes: `Satisfies ${receivingName}: ${receivingInfo}`,
+          });
         }
       }
     }
@@ -234,7 +246,7 @@ export default function TransferRequirementsScreen() {
     const updatedCourses = [...existingCourses, ...newCourses];
     await saveCourses(updatedCourses);
     setExistingCourses(updatedCourses);
-    setSelectedAgreements(new Set());
+    setSelectedCourses(new Set());
     setShowAddModal(false);
   };
 
@@ -332,36 +344,27 @@ export default function TransferRequirementsScreen() {
 
   const renderAgreementItem = ({ item, index }: { item: ArticulationAgreement; index: number }) => {
     const alreadyAdded = isAgreementAlreadyAdded(item);
-    const isSelected = selectedAgreements.has(item.id);
     const hasNoEquivalent = item.noArticulation || item.sendingCourses.length === 0;
-
-    const receivingDisplay = item.receivingCourses
-      .map((c) => c.code)
-      .join(item.conjunction === "OR" ? " OR " : " AND ");
-    
-    const sendingDisplay = item.sendingCourses
-      .map((c) => c.code)
-      .join(item.conjunction === "OR" ? " OR " : " AND ");
+    const hasAnySelected = item.sendingCourses.some(
+      (c) => isCourseSelected(item.id, c.code)
+    );
 
     return (
       <Animated.View entering={FadeInDown.delay(index * 20).duration(200)}>
-        <Pressable
-          onPress={() => !alreadyAdded && !hasNoEquivalent && toggleAgreementSelection(item.id)}
-          disabled={alreadyAdded || hasNoEquivalent}
-          style={({ pressed }) => [
+        <View
+          style={[
             styles.agreementCard,
             {
-              backgroundColor: isSelected
+              backgroundColor: hasAnySelected
                 ? `${theme.primary}10`
                 : alreadyAdded
                 ? `${theme.success}08`
                 : theme.backgroundDefault,
-              borderColor: isSelected
+              borderColor: hasAnySelected
                 ? theme.primary
                 : alreadyAdded
                 ? theme.success
                 : theme.border,
-              opacity: pressed && !alreadyAdded && !hasNoEquivalent ? 0.8 : 1,
             },
           ]}
         >
@@ -406,28 +409,69 @@ export default function TransferRequirementsScreen() {
               <View style={[styles.equivalentSection, { backgroundColor: `${theme.success}08` }]}>
                 <View style={styles.requirementHeader}>
                   <ThemedText type="small" style={{ color: theme.success, fontWeight: "600" }}>
-                    {sendingName} Course{item.sendingCourses.length > 1 ? "s" : ""}
+                    {sendingName} Course{item.sendingCourses.length > 1 ? "s" : ""} - Tap to select
                   </ThemedText>
                 </View>
-                {item.sendingCourses.map((course, idx) => (
-                  <View key={course.id + idx} style={styles.courseRow}>
-                    <ThemedText type="h4" style={{ color: theme.success }}>
-                      {course.code}
-                    </ThemedText>
-                    <ThemedText
-                      type="body"
-                      numberOfLines={1}
-                      style={{ color: theme.text, flex: 1, marginLeft: Spacing.sm }}
+                {item.sendingCourses.map((course, idx) => {
+                  const inRoadmap = isCourseInRoadmap(course.code);
+                  const isSelected = isCourseSelected(item.id, course.code);
+                  
+                  return (
+                    <Pressable
+                      key={course.id + idx}
+                      onPress={() => toggleCourseSelection(item.id, course)}
+                      disabled={inRoadmap}
+                      style={({ pressed }) => [
+                        styles.selectableCourseRow,
+                        {
+                          backgroundColor: isSelected
+                            ? `${theme.primary}15`
+                            : inRoadmap
+                            ? `${theme.success}10`
+                            : "transparent",
+                          opacity: pressed && !inRoadmap ? 0.7 : 1,
+                        },
+                      ]}
                     >
-                      {course.title}
-                    </ThemedText>
-                    {isCourseInRoadmap(course.code) ? (
-                      <View style={[styles.inRoadmapBadge, { backgroundColor: `${theme.success}20` }]}>
-                        <Feather name="check" size={10} color={theme.success} />
+                      <View
+                        style={[
+                          styles.courseCheckbox,
+                          {
+                            backgroundColor: isSelected
+                              ? theme.primary
+                              : inRoadmap
+                              ? theme.success
+                              : theme.backgroundSecondary,
+                            borderColor: isSelected
+                              ? theme.primary
+                              : inRoadmap
+                              ? theme.success
+                              : theme.border,
+                          },
+                        ]}
+                      >
+                        {isSelected || inRoadmap ? (
+                          <Feather name="check" size={12} color="#FFFFFF" />
+                        ) : null}
                       </View>
-                    ) : null}
-                  </View>
-                ))}
+                      <ThemedText type="h4" style={{ color: theme.success, marginLeft: Spacing.sm }}>
+                        {course.code}
+                      </ThemedText>
+                      <ThemedText
+                        type="body"
+                        numberOfLines={1}
+                        style={{ color: theme.text, flex: 1, marginLeft: Spacing.sm }}
+                      >
+                        {course.title}
+                      </ThemedText>
+                      {inRoadmap ? (
+                        <ThemedText type="small" style={{ color: theme.success, marginLeft: Spacing.xs }}>
+                          Added
+                        </ThemedText>
+                      ) : null}
+                    </Pressable>
+                  );
+                })}
               </View>
             )}
 
@@ -435,26 +479,12 @@ export default function TransferRequirementsScreen() {
               <View style={[styles.addedBadge, { backgroundColor: `${theme.success}20`, marginTop: Spacing.sm }]}>
                 <Feather name="check" size={12} color={theme.success} />
                 <ThemedText type="small" style={{ color: theme.success, marginLeft: 4 }}>
-                  In Roadmap
+                  All courses in Roadmap
                 </ThemedText>
               </View>
             ) : null}
           </View>
-
-          {!alreadyAdded && !hasNoEquivalent ? (
-            <View
-              style={[
-                styles.checkbox,
-                {
-                  backgroundColor: isSelected ? theme.primary : theme.backgroundSecondary,
-                  borderColor: isSelected ? theme.primary : theme.border,
-                },
-              ]}
-            >
-              {isSelected ? <Feather name="check" size={14} color="#FFFFFF" /> : null}
-            </View>
-          ) : null}
-        </Pressable>
+        </View>
       </Animated.View>
     );
   };
@@ -517,7 +547,7 @@ export default function TransferRequirementsScreen() {
               onPress={() => {
                 setSelectedMajor(null);
                 setAgreements([]);
-                setSelectedAgreements(new Set());
+                setSelectedCourses(new Set());
               }}
               style={styles.backButton}
             >
@@ -563,7 +593,7 @@ export default function TransferRequirementsScreen() {
           keyExtractor={(item) => item.id}
           contentContainerStyle={[
             styles.listContent,
-            { paddingBottom: selectedAgreements.size > 0 ? 160 : tabBarHeight + Spacing.xl },
+            { paddingBottom: selectedCourses.size > 0 ? 160 : tabBarHeight + Spacing.xl },
           ]}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
@@ -578,7 +608,7 @@ export default function TransferRequirementsScreen() {
         />
       )}
 
-      {selectedAgreements.size > 0 ? (
+      {selectedCourses.size > 0 ? (
         <View
           style={[
             styles.footer,
@@ -590,7 +620,7 @@ export default function TransferRequirementsScreen() {
           ]}
         >
           <ThemedText type="body" style={{ marginBottom: Spacing.sm }}>
-            {selectedAgreements.size} requirement{selectedAgreements.size !== 1 ? "s" : ""}{" "}
+            {selectedCourses.size} course{selectedCourses.size !== 1 ? "s" : ""}{" "}
             selected
           </ThemedText>
           <Button onPress={() => setShowAddModal(true)}>
@@ -648,7 +678,7 @@ export default function TransferRequirementsScreen() {
               </Pressable>
             ))}
 
-            <Button onPress={addSelectedAgreements} style={{ marginTop: Spacing.lg }}>
+            <Button onPress={addSelectedCourses} style={{ marginTop: Spacing.lg }}>
               Add Courses
             </Button>
           </ThemedView>
@@ -730,6 +760,22 @@ const styles = StyleSheet.create({
   },
   courseCode: {
     fontSize: 15,
+  },
+  selectableCourseRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.sm,
+    marginTop: Spacing.xs,
+    borderRadius: BorderRadius.sm,
+  },
+  courseCheckbox: {
+    width: 20,
+    height: 20,
+    borderRadius: BorderRadius.xs,
+    borderWidth: 2,
+    alignItems: "center",
+    justifyContent: "center",
   },
   courseTitle: {
     fontSize: 14,
