@@ -339,13 +339,9 @@ export default function TransferRequirementsScreen() {
       .map((c) => c.code)
       .join(item.conjunction === "OR" ? " OR " : " AND ");
     
-    const totalReceivingUnits = item.receivingCourses.reduce((sum, c) => sum + c.units, 0);
-    
     const sendingDisplay = item.sendingCourses
       .map((c) => c.code)
       .join(item.conjunction === "OR" ? " OR " : " AND ");
-    
-    const totalSendingUnits = item.sendingCourses.reduce((sum, c) => sum + c.units, 0);
 
     return (
       <Animated.View entering={FadeInDown.delay(index * 20).duration(200)}>
@@ -375,11 +371,6 @@ export default function TransferRequirementsScreen() {
                 <ThemedText type="small" style={{ color: theme.primary, fontWeight: "600" }}>
                   {receivingName} Requirement
                 </ThemedText>
-                <View style={[styles.unitsBadge, { backgroundColor: theme.primary }]}>
-                  <ThemedText type="small" style={styles.unitsText}>
-                    {totalReceivingUnits} units
-                  </ThemedText>
-                </View>
               </View>
               {item.receivingCourses.map((course, idx) => (
                 <View key={course.id + idx} style={styles.courseRow}>
@@ -417,11 +408,6 @@ export default function TransferRequirementsScreen() {
                   <ThemedText type="small" style={{ color: theme.success, fontWeight: "600" }}>
                     {sendingName} Course{item.sendingCourses.length > 1 ? "s" : ""}
                   </ThemedText>
-                  <View style={[styles.unitsBadge, { backgroundColor: theme.success }]}>
-                    <ThemedText type="small" style={styles.unitsText}>
-                      {totalSendingUnits} units
-                    </ThemedText>
-                  </View>
                 </View>
                 {item.sendingCourses.map((course, idx) => (
                   <View key={course.id + idx} style={styles.courseRow}>
@@ -744,16 +730,6 @@ const styles = StyleSheet.create({
   },
   courseCode: {
     fontSize: 15,
-  },
-  unitsBadge: {
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 2,
-    borderRadius: BorderRadius.full,
-  },
-  unitsText: {
-    color: "#FFFFFF",
-    fontWeight: "700",
-    fontSize: 11,
   },
   courseTitle: {
     fontSize: 14,
