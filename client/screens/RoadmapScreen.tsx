@@ -60,6 +60,9 @@ export default function RoadmapScreen() {
   const [currentSemesterIndex, setCurrentSemesterIndex] = useState(0);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showCourseModal, setShowCourseModal] = useState(false);
+  const [showGradeModal, setShowGradeModal] = useState(false);
+  const [courseToGrade, setCourseToGrade] = useState<Course | null>(null);
+  const [pendingGrade, setPendingGrade] = useState<CourseGrade | undefined>(undefined);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [roadmapMode, setRoadmapMode] = useState<RoadmapMode>("semester");
   const [newCourse, setNewCourse] = useState({
@@ -105,11 +108,57 @@ export default function RoadmapScreen() {
 
   const toggleCourseComplete = async (courseId: string) => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    const course = courses.find((c) => c.id === courseId);
+    if (!course) return;
+
+    if (!course.completed) {
+      setCourseToGrade(course);
+      setPendingGrade(course.grade);
+      setShowCourseModal(false);
+      setShowGradeModal(true);
+    } else {
+      const updatedCourses = courses.map((c) =>
+        c.id === courseId ? { ...c, completed: false, status: "in_progress" as CourseStatus } : c
+      );
+      setCourses(updatedCourses);
+      await saveCourses(updatedCourses);
+      if (selectedCourse?.id === courseId) {
+        setSelectedCourse({ ...selectedCourse, completed: false, status: "in_progress" });
+      }
+    }
+  };
+
+  const saveGradeAndComplete = async (skipGrade: boolean = false) => {
+    if (!courseToGrade) return;
+    
+    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     const updatedCourses = courses.map((c) =>
-      c.id === courseId ? { ...c, completed: !c.completed } : c
+      c.id === courseToGrade.id
+        ? {
+            ...c,
+            completed: true,
+            status: "taken" as CourseStatus,
+            grade: skipGrade ? undefined : pendingGrade,
+          }
+        : c
     );
     setCourses(updatedCourses);
     await saveCourses(updatedCourses);
+    setShowGradeModal(false);
+    setCourseToGrade(null);
+    setPendingGrade(undefined);
+  };
+
+  const updateCourseGrade = async (grade: CourseGrade) => {
+    if (!selectedCourse) return;
+    
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    const updatedCourses = courses.map((c) =>
+      c.id === selectedCourse.id ? { ...c, grade } : c
+    );
+    setCourses(updatedCourses);
+    await saveCourses(updatedCourses);
+    setSelectedCourse({ ...selectedCourse, grade });
   };
 
   const addCourse = async () => {
@@ -693,6 +742,49 @@ export default function RoadmapScreen() {
                       {selectedCourse.completed ? "Completed" : "In Progress"}
                     </ThemedText>
                   </View>
+
+                  {selectedCourse.completed ? (
+                    <View style={{ marginTop: Spacing.md }}>
+                      <ThemedText type="small" style={{ color: theme.textSecondary, marginBottom: Spacing.xs }}>
+                        Grade {selectedCourse.grade ? "" : "(not set)"}
+                      </ThemedText>
+                      <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        contentContainerStyle={styles.gradeRow}
+                      >
+                        {GRADES.map((grade) => (
+                          <Pressable
+                            key={grade}
+                            onPress={() => updateCourseGrade(grade)}
+                            style={[
+                              styles.gradeButton,
+                              {
+                                backgroundColor:
+                                  selectedCourse.grade === grade
+                                    ? theme.success
+                                    : theme.backgroundSecondary,
+                                borderColor:
+                                  selectedCourse.grade === grade
+                                    ? theme.success
+                                    : theme.border,
+                              },
+                            ]}
+                          >
+                            <ThemedText
+                              type="small"
+                              style={{
+                                color: selectedCourse.grade === grade ? "#FFFFFF" : theme.text,
+                                fontWeight: "600",
+                              }}
+                            >
+                              {grade}
+                            </ThemedText>
+                          </Pressable>
+                        ))}
+                      </ScrollView>
+                    </View>
+                  ) : null}
                 </View>
 
                 <View style={styles.modalActions}>
@@ -714,6 +806,101 @@ export default function RoadmapScreen() {
                     <Feather name="trash-2" size={20} color={theme.error} />
                   </Pressable>
                 </View>
+              </>
+            ) : null}
+          </ThemedView>
+        </View>
+      </Modal>
+
+      <Modal
+        visible={showGradeModal}
+        animationType="slide"
+        transparent
+        onRequestClose={() => {
+          setShowGradeModal(false);
+          setCourseToGrade(null);
+          setPendingGrade(undefined);
+        }}
+      >
+        <View style={styles.modalOverlay}>
+          <ThemedView style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <ThemedText type="h3">Enter Grade</ThemedText>
+              <Pressable
+                onPress={() => {
+                  setShowGradeModal(false);
+                  setCourseToGrade(null);
+                  setPendingGrade(undefined);
+                }}
+                hitSlop={12}
+              >
+                <Feather name="x" size={24} color={theme.text} />
+              </Pressable>
+            </View>
+
+            {courseToGrade ? (
+              <>
+                <ThemedText type="body" style={{ marginBottom: Spacing.md }}>
+                  What grade did you receive in{" "}
+                  <ThemedText type="body" style={{ fontWeight: "700" }}>
+                    {courseToGrade.code}
+                  </ThemedText>
+                  ?
+                </ThemedText>
+
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.gradeRow}
+                >
+                  {GRADES.map((grade) => (
+                    <Pressable
+                      key={grade}
+                      onPress={() => setPendingGrade(grade)}
+                      style={[
+                        styles.gradeButton,
+                        {
+                          backgroundColor:
+                            pendingGrade === grade
+                              ? theme.success
+                              : theme.backgroundSecondary,
+                          borderColor:
+                            pendingGrade === grade
+                              ? theme.success
+                              : theme.border,
+                        },
+                      ]}
+                    >
+                      <ThemedText
+                        type="small"
+                        style={{
+                          color: pendingGrade === grade ? "#FFFFFF" : theme.text,
+                          fontWeight: "600",
+                        }}
+                      >
+                        {grade}
+                      </ThemedText>
+                    </Pressable>
+                  ))}
+                </ScrollView>
+
+                <View style={[styles.modalActions, { marginTop: Spacing.lg }]}>
+                  <Button
+                    onPress={() => saveGradeAndComplete(false)}
+                    disabled={!pendingGrade}
+                    style={{ flex: 1 }}
+                  >
+                    Save Grade
+                  </Button>
+                </View>
+                <Pressable
+                  onPress={() => saveGradeAndComplete(true)}
+                  style={{ alignItems: "center", paddingVertical: Spacing.md }}
+                >
+                  <ThemedText type="body" style={{ color: theme.link }}>
+                    Skip for now
+                  </ThemedText>
+                </Pressable>
               </>
             ) : null}
           </ThemedView>
