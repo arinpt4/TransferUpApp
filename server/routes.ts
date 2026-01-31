@@ -343,15 +343,70 @@ function parseArticulationDataForChat(data: any): any[] {
   }));
 }
 
-function parseArticulationData(data: any): any[] {
-  const courses: any[] = [];
+interface ParsedCourse {
+  id: string;
+  code: string;
+  title: string;
+  units: number;
+  department: string;
+  transferable: boolean;
+  source: string;
+}
+
+interface ArticulationAgreement {
+  id: string;
+  receivingCourses: ParsedCourse[];
+  sendingCourses: ParsedCourse[];
+  conjunction: string;
+  noArticulation: boolean;
+}
+
+function extractCoursesFromCell(cell: any): ParsedCourse[] {
+  const courses: ParsedCourse[] = [];
+  
+  if (cell.type === "Course" && cell.course) {
+    const course = cell.course;
+    if (course.courseTitle && course.courseNumber) {
+      courses.push({
+        id: `${course.prefix || ""}${course.courseNumber}`,
+        code: `${course.prefix || ""} ${course.courseNumber}`.trim(),
+        title: course.courseTitle,
+        units: course.maxUnits || course.minUnits || 3,
+        department: course.department || course.prefixDescription || "",
+        transferable: true,
+        source: "ASSIST",
+      });
+    }
+  }
+  
+  if (cell.courses && Array.isArray(cell.courses)) {
+    for (const course of cell.courses) {
+      if (course.courseTitle && course.courseNumber) {
+        courses.push({
+          id: `${course.prefix || ""}${course.courseNumber}`,
+          code: `${course.prefix || ""} ${course.courseNumber}`.trim(),
+          title: course.courseTitle,
+          units: course.maxUnits || course.minUnits || 3,
+          department: course.department || course.prefixDescription || "",
+          transferable: true,
+          source: "ASSIST",
+        });
+      }
+    }
+  }
+  
+  return courses;
+}
+
+function parseArticulationAgreements(data: any): ArticulationAgreement[] {
+  const agreements: ArticulationAgreement[] = [];
   
   try {
     const result = data?.result;
-    if (!result) return courses;
+    if (!result) return agreements;
 
     const templateAssets = result.templateAssets;
-    if (!templateAssets) return courses;
+    if (!templateAssets) return agreements;
 
     let assets: any[];
     if (typeof templateAssets === "string") {
@@ -360,42 +415,33 @@ function parseArticulationData(data: any): any[] {
       assets = templateAssets;
     }
 
+    let agreementIndex = 0;
+
     for (const asset of assets) {
       if (asset.type === "RequirementGroup" && asset.sections) {
         for (const section of asset.sections) {
           if (section.rows) {
             for (const row of section.rows) {
-              if (row.cells) {
-                for (const cell of row.cells) {
-                  if (cell.type === "Course" && cell.course) {
-                    const course = cell.course;
-                    if (course.courseTitle && course.courseNumber) {
-                      courses.push({
-                        id: `${course.prefix || ""}${course.courseNumber}`,
-                        code: `${course.prefix || ""} ${course.courseNumber}`.trim(),
-                        title: course.courseTitle,
-                        units: course.maxUnits || course.minUnits || 3,
-                        department: course.department || course.prefixDescription || "",
-                        transferable: true,
-                        source: "ASSIST",
-                      });
-                    }
-                  }
-                  if (cell.courses && Array.isArray(cell.courses)) {
-                    for (const course of cell.courses) {
-                      if (course.courseTitle && course.courseNumber) {
-                        courses.push({
-                          id: `${course.prefix || ""}${course.courseNumber}`,
-                          code: `${course.prefix || ""} ${course.courseNumber}`.trim(),
-                          title: course.courseTitle,
-                          units: course.maxUnits || course.minUnits || 3,
-                          department: course.department || course.prefixDescription || "",
-                          transferable: true,
-                          source: "ASSIST",
-                        });
-                      }
-                    }
-                  }
+              if (row.cells && row.cells.length >= 2) {
+                const receivingCell = row.cells[0];
+                const sendingCell = row.cells[1];
+                
+                const receivingCourses = extractCoursesFromCell(receivingCell);
+                const sendingCourses = extractCoursesFromCell(sendingCell);
+                
+                const noArticulation = sendingCell.type === "NoArticulation" || 
+                  (sendingCourses.length === 0 && receivingCourses.length > 0);
+                
+                const conjunction = receivingCell.courseConjunction || sendingCell.courseConjunction || "AND";
+                
+                if (receivingCourses.length > 0) {
+                  agreements.push({
+                    id: `agreement-${agreementIndex++}`,
+                    receivingCourses,
+                    sendingCourses,
+                    conjunction,
+                    noArticulation,
+                  });
                 }
               }
             }
@@ -404,15 +450,30 @@ function parseArticulationData(data: any): any[] {
       }
     }
   } catch (e) {
-    console.error("Error parsing articulation data:", e);
+    console.error("Error parsing articulation agreements:", e);
   }
 
-  const uniqueCourses = courses.filter(
-    (course, index, self) =>
-      index === self.findIndex((c) => c.code === course.code)
-  );
+  return agreements;
+}
 
-  return uniqueCourses;
+function parseArticulationData(data: any): any[] {
+  const agreements = parseArticulationAgreements(data);
+  const courses: any[] = [];
+  
+  for (const agreement of agreements) {
+    for (const course of agreement.sendingCourses) {
+      if (!courses.some(c => c.code === course.code)) {
+        courses.push(course);
+      }
+    }
+    for (const course of agreement.receivingCourses) {
+      if (!courses.some(c => c.code === course.code)) {
+        courses.push(course);
+      }
+    }
+  }
+  
+  return courses;
 }
 
 interface ArticulationCourse {
@@ -544,10 +605,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const data = await response.json();
       
       const parsedCourses = parseArticulationData(data);
+      const agreements = parseArticulationAgreements(data);
       
       res.json({
         raw: data,
         courses: parsedCourses,
+        agreements: agreements,
       });
     } catch (error) {
       console.error("Error fetching articulation:", error);
