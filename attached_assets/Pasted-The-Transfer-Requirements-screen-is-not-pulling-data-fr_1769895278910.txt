@@ -1,0 +1,68 @@
+The Transfer Requirements screen is not pulling data from the ASSIST API correctly - it always says "no articulation agreements found" regardless of major.
+
+DEBUG AND FIX THE ASSIST API INTEGRATION:
+
+1. ADD CONSOLE LOGGING TO DEBUG:
+   - Log the exact API endpoint being called
+   - Log the institution codes being used (fromInstitutionCode, toInstitutionCode)
+   - Log the major/agreement key being used
+   - Log the full API response
+   - Log any errors
+
+2. VERIFY THE API CALL CHAIN:
+   Step 1: Get institutions (verify this works)
+   - Endpoint: GET /api/institutions
+   - Should return list of all CA colleges with their codes
+   
+   Step 2: Get agreements between two schools (verify this works)
+   - Endpoint: GET /api/agreements?fromInstitutionCode=X&toInstitutionCode=Y
+   - Example: fromInstitutionCode=113 (De Anza), toInstitutionCode=1 (UC Berkeley)
+   - Should return list of available majors with agreement keys
+   
+   Step 3: Get articulation details for a major (THIS IS PROBABLY FAILING)
+   - Endpoint: GET /api/articulation?key=AGREEMENT_KEY
+   - The agreement key comes from step 2
+   - Should return detailed course articulation data
+
+3. COMMON ISSUES TO CHECK:
+
+   Issue A: Institution codes are wrong
+   - Print the exact codes being sent to the API
+   - Verify they match ASSIST.org's institution codes
+   - Example: De Anza = 113, UC Berkeley = 1
+   
+   Issue B: Agreement key is malformed
+   - The key from /api/agreements needs to be passed exactly as-is
+   - Don't modify or encode it incorrectly
+   - Log the key before calling /api/articulation
+   
+   Issue C: Major name doesn't match
+   - Don't search by major name typed by user
+   - User should SELECT from the list returned by /api/agreements
+   - The selected major's key is what you pass to /api/articulation
+   
+   Issue D: API endpoints aren't proxying correctly
+   - Test each endpoint directly in browser or Postman
+   - Verify your backend is correctly calling ASSIST.org
+   - Check for CORS issues or authentication problems
+
+4. TEST WITH KNOWN WORKING EXAMPLE:
+   Use this exact test case that definitely has articulation:
+   - From: De Anza College (code: 113)
+   - To: UC Berkeley (code: 1)  
+   - Major: Computer Science (should have many articulated courses)
+   
+   If this doesn't work, the API integration is broken.
+
+5. FIX THE FLOW:
+   The user journey should be:
+   a) Select community college → saves institution code
+   b) Select target university → saves institution code
+   c) Call /api/agreements with both codes → get list of majors
+   d) User selects a major from the list
+   e) Call /api/articulation with that major's agreement key
+   f) Display the course articulations
+
+6. RESPONSE STRUCTURE:
+   When /api/articulation works correctly, it should return something like:
+```json

@@ -63,11 +63,27 @@ The app integrates with ASSIST.org to show official transfer requirements:
   - `/api/institutions` - Fetches all 100+ California community colleges and universities
   - `/api/agreements?sendingInstitutionId=X&receivingInstitutionId=Y&academicYearId=74` - Gets list of majors/programs with articulation agreements
   - `/api/articulation/Agreements?Key=...` - Gets detailed course requirements for a specific major
+
+**IMPORTANT: ASSIST.org Data Structure**
+The articulation API response contains:
+- `result.templateAssets` - Nested JSON showing major requirements layout (NOT the actual articulation mappings)
+- `result.articulations` - JSON string containing actual course-to-course articulation mappings:
+  - `articulation.course` - The receiving (university) course requirement
+  - `articulation.sendingArticulation.items` - The sending (CC) courses that satisfy the requirement
   
 ### Backend API Endpoints
-- `GET /api/institutions` - Proxies ASSIST.org institutions, transforms to normalized format
+- `GET /api/institutions` - Proxies ASSIST.org institutions, transforms to normalized format with id, code, name, type (CC/UC/CSU)
 - `GET /api/agreements` - Proxies ASSIST.org agreements endpoint for majors list
-- `GET /api/articulation?key=...` - Fetches and parses articulation data, extracting courses with code, title, units, and department
+- `GET /api/articulation?key=...` - Fetches articulation data and parses into ArticulationAgreement objects:
+  - `receivingCourses[]` - University requirement courses
+  - `sendingCourses[]` - CC equivalent courses
+  - `noArticulation` - True if no CC equivalent exists
+  - `conjunction` - "AND" or "OR" for multi-course requirements
+
+**Institution ID Examples:**
+- De Anza College: 113
+- UC Berkeley: 79
+- Foothill College: 119
 
 ### Database
 - **PostgreSQL**: Configured via `DATABASE_URL` environment variable

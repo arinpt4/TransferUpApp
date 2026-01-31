@@ -364,8 +364,7 @@ interface ArticulationAgreement {
 function extractCoursesFromCell(cell: any): ParsedCourse[] {
   const courses: ParsedCourse[] = [];
   
-  if (cell.type === "Course" && cell.course) {
-    const course = cell.course;
+  const addCourse = (course: any) => {
     if (course.courseTitle && course.courseNumber) {
       courses.push({
         id: `${course.prefix || ""}${course.courseNumber}`,
@@ -377,20 +376,34 @@ function extractCoursesFromCell(cell: any): ParsedCourse[] {
         source: "ASSIST",
       });
     }
+  };
+  
+  // Handle single Course type
+  if (cell.type === "Course" && cell.course) {
+    addCourse(cell.course);
   }
   
+  // Handle Series type (most common in ASSIST.org)
+  if (cell.type === "Series" && cell.series?.courses) {
+    for (const course of cell.series.courses) {
+      addCourse(course);
+    }
+  }
+  
+  // Handle direct courses array on cell
   if (cell.courses && Array.isArray(cell.courses)) {
     for (const course of cell.courses) {
-      if (course.courseTitle && course.courseNumber) {
-        courses.push({
-          id: `${course.prefix || ""}${course.courseNumber}`,
-          code: `${course.prefix || ""} ${course.courseNumber}`.trim(),
-          title: course.courseTitle,
-          units: course.maxUnits || course.minUnits || 3,
-          department: course.department || course.prefixDescription || "",
-          transferable: true,
-          source: "ASSIST",
-        });
+      addCourse(course);
+    }
+  }
+  
+  // Handle GroupSeries with multiple series
+  if (cell.type === "GroupSeries" && cell.groupSeries) {
+    for (const group of cell.groupSeries) {
+      if (group.courses) {
+        for (const course of group.courses) {
+          addCourse(course);
+        }
       }
     }
   }
@@ -403,52 +416,98 @@ function parseArticulationAgreements(data: any): ArticulationAgreement[] {
   
   try {
     const result = data?.result;
-    if (!result) return agreements;
-
-    const templateAssets = result.templateAssets;
-    if (!templateAssets) return agreements;
-
-    let assets: any[];
-    if (typeof templateAssets === "string") {
-      assets = JSON.parse(templateAssets);
-    } else {
-      assets = templateAssets;
+    if (!result) {
+      return agreements;
     }
 
-    let agreementIndex = 0;
+    // Parse the articulations property - this contains actual course-to-course mappings
+    let articulations = result.articulations;
+    if (!articulations) {
+      return agreements;
+    }
+    
+    // Parse if it's a string
+    if (typeof articulations === "string") {
+      articulations = JSON.parse(articulations);
+    }
+    
+    if (!Array.isArray(articulations)) {
+      return agreements;
+    }
 
-    for (const asset of assets) {
-      if (asset.type === "RequirementGroup" && asset.sections) {
-        for (const section of asset.sections) {
-          if (section.rows) {
-            for (const row of section.rows) {
-              if (row.cells && row.cells.length >= 2) {
-                const receivingCell = row.cells[0];
-                const sendingCell = row.cells[1];
-                
-                const receivingCourses = extractCoursesFromCell(receivingCell);
-                const sendingCourses = extractCoursesFromCell(sendingCell);
-                
-                const noArticulation = sendingCell.type === "NoArticulation" || 
-                  (sendingCourses.length === 0 && receivingCourses.length > 0);
-                
-                const conjunction = receivingCell.courseConjunction || sendingCell.courseConjunction || "AND";
-                
-                if (receivingCourses.length > 0) {
-                  agreements.push({
-                    id: `agreement-${agreementIndex++}`,
-                    receivingCourses,
-                    sendingCourses,
-                    conjunction,
-                    noArticulation,
-                  });
-                }
+    for (let i = 0; i < articulations.length; i++) {
+      const entry = articulations[i];
+      const art = entry.articulation;
+      
+      if (!art) continue;
+      
+      // Extract receiving (university) course
+      const receivingCourses: ParsedCourse[] = [];
+      if (art.course) {
+        const course = art.course;
+        receivingCourses.push({
+          id: `${course.prefix || ""}${course.courseNumber}`,
+          code: `${course.prefix || ""} ${course.courseNumber}`.trim(),
+          title: course.courseTitle || "",
+          units: course.maxUnits || course.minUnits || 3,
+          department: course.department || course.prefixDescription || "",
+          transferable: true,
+          source: "ASSIST",
+        });
+      }
+      
+      // Extract sending (CC) courses from sendingArticulation
+      const sendingCourses: ParsedCourse[] = [];
+      const sendingArt = art.sendingArticulation;
+      
+      if (sendingArt?.items) {
+        for (const item of sendingArt.items) {
+          // items can contain nested items (for AND/OR groups) or direct courses
+          if (item.items) {
+            for (const subItem of item.items) {
+              if (subItem.courseNumber) {
+                sendingCourses.push({
+                  id: `${subItem.prefix || ""}${subItem.courseNumber}`,
+                  code: `${subItem.prefix || ""} ${subItem.courseNumber}`.trim(),
+                  title: subItem.courseTitle || "",
+                  units: subItem.maxUnits || subItem.minUnits || 3,
+                  department: subItem.department || subItem.prefixDescription || "",
+                  transferable: true,
+                  source: "ASSIST",
+                });
               }
             }
+          } else if (item.courseNumber) {
+            sendingCourses.push({
+              id: `${item.prefix || ""}${item.courseNumber}`,
+              code: `${item.prefix || ""} ${item.courseNumber}`.trim(),
+              title: item.courseTitle || "",
+              units: item.maxUnits || item.minUnits || 3,
+              department: item.department || item.prefixDescription || "",
+              transferable: true,
+              source: "ASSIST",
+            });
           }
         }
       }
+      
+      const noArticulation = sendingArt?.noArticulationReason !== null || 
+        (receivingCourses.length > 0 && sendingCourses.length === 0);
+      
+      // Get conjunction from sendingArticulation items
+      const conjunction = sendingArt?.items?.[0]?.courseConjunction || "AND";
+      
+      if (receivingCourses.length > 0) {
+        agreements.push({
+          id: `agreement-${i}`,
+          receivingCourses,
+          sendingCourses,
+          conjunction,
+          noArticulation,
+        });
+      }
     }
+    
   } catch (e) {
     console.error("Error parsing articulation agreements:", e);
   }
