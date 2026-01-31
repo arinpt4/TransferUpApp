@@ -1,0 +1,101 @@
+Fix the Transfer Requirements screen - it currently ONLY shows university courses, but it needs to show BOTH the university requirement AND the community college course that satisfies it.
+
+CURRENT PROBLEM:
+When viewing transfer requirements, the screen only displays the target university's courses (e.g., "UC BERKELEY CS 61A"). It doesn't show which community college course satisfies each requirement.
+
+WHAT IT SHOULD SHOW:
+For each university requirement, display BOTH:
+1. What the target university requires
+2. What community college course fulfills that requirement
+
+NEW DISPLAY STRUCTURE:
+
+FOR EACH REQUIREMENT, SHOW THIS CARD:
+┌─────────────────────────────────────────────┐
+│ [TARGET UNIVERSITY] Requirement             │
+│ CS 61A - Data Structures              4 units│
+│                                             │
+│ ↓ Satisfied by at [CC NAME]                │
+│                                             │
+│ CIS 22B - Intermediate Programming   4.5 units│
+│                                             │
+│ [✓ In Roadmap] or [Add to Roadmap]         │
+└─────────────────────────────────────────────┘
+
+API INTEGRATION:
+The ASSIST API returns articulation agreements with BOTH courses:
+- `receivingCourse` = university course (the requirement)
+- `sendingCourse` = community college course (the equivalent)
+
+Currently you're only displaying the receivingCourse. You need to display BOTH.
+
+PARSING THE API RESPONSE:
+When you get articulation data from ASSIST API:
+```javascript
+// For each articulation agreement:
+{
+  receivingCourse: {
+    code: "CS 61A",
+    title: "Structure and Interpretation of Computer Programs",
+    units: 4,
+    institution: "UC Berkeley"
+  },
+  sendingCourse: {
+    code: "CIS 22A", 
+    title: "Beginning Programming Methodologies in Java",
+    units: 4.5,
+    institution: "De Anza College"
+  }
+}
+```
+
+Display format:
+1. TOP SECTION (University Requirement):
+   - Bold, larger text
+   - "[University Name] [Course Code]"
+   - Course title
+   - Units
+   - Use blue accent color
+
+2. MIDDLE SECTION (Connection):
+   - Arrow or "Satisfied by at [CC Name]" text
+   - text-slate-400, smaller
+
+3. BOTTOM SECTION (CC Equivalent):
+   - Normal weight text
+   - "[CC Course Code]"
+   - Course title  
+   - Units
+   - Slightly indented or lighter background
+
+4. BUTTON:
+   - "Add to Roadmap" - adds the CC course to roadmap
+   - "In Roadmap" badge if already added
+
+HANDLE SPECIAL CASES:
+1. No equivalent exists:
+   - Show: "No direct equivalent at [CC Name]"
+   - Suggest: "Consult with advisor"
+   - Still allow adding as placeholder
+
+2. Multiple CC courses satisfy one requirement:
+   - Show all options
+   - Let user select which one to add
+   - Example: "MATH 1A OR MATH 1AH"
+
+3. Series requirements:
+   - Group related courses (e.g., "MATH 1A AND MATH 1B")
+   - Show all parts of the series
+
+WHAT TO ADD TO ROADMAP:
+- When user clicks "Add to Roadmap", add the COMMUNITY COLLEGE course (sendingCourse)
+- Store metadata: which university requirement it satisfies
+- On roadmap, show: "CIS 22A (Satisfies UC Berkeley CS 61A)"
+
+CRITICAL:
+- Parse BOTH sendingCourse and receivingCourse from ASSIST API
+- Display BOTH on the requirements screen
+- Make the relationship clear: University requires X, CC course Y satisfies it
+- This must work dynamically for ANY university and CC combination
+
+Fix the Transfer Requirements screen to show the complete articulation: what the university requires AND what CC course satisfies it.
