@@ -54,8 +54,8 @@ export default function GPACalculatorScreen() {
   };
 
   const gradientColors = isDark
-    ? ["#F59E0B", "#D97706", "#1E40AF"] as const
-    : ["#FCD34D", "#F59E0B", "#3B82F6"] as const;
+    ? ["#1E40AF", "#3B82F6", "#60A5FA"] as const
+    : ["#3B82F6", "#2563EB", "#1D4ED8"] as const;
 
   return (
     <ScrollView
