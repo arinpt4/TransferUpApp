@@ -1,0 +1,122 @@
+Create a modern, visually striking landing page for TransferUp as a single HTML file. This will be hosted separately from the app.
+
+DESIGN REQUIREMENTS:
+- Modern SaaS-style design (similar to Linear, Vercel, Stripe)
+- Dark theme with animated background
+- Glassmorphism and smooth animations
+- Fully responsive (mobile and desktop)
+- Single HTML file with embedded CSS
+
+SECTIONS TO INCLUDE:
+
+1. ANIMATED BACKGROUND:
+   - Black base background (#000000)
+   - Animated radial gradients with blue tones that drift slowly
+   - Moving grid overlay with subtle blue lines
+   - Use CSS animations (drift and grid-move keyframes)
+   - Gradients should use rgba(59, 130, 246, 0.15) for blue glow effects
+
+2. NAVIGATION BAR:
+   - Sticky navigation with backdrop blur
+   - Logo: "TransferUp" with gradient text (blue to purple)
+   - "Coming Soon" button on right (subtle blue background with border)
+   - Background: rgba(0, 0, 0, 0.5) with blur
+
+3. HERO SECTION:
+   - Badge at top: "🎓 For California Students" (small, rounded, blue background)
+   - Main heading: "Transfer Made Simple" (96px, font-weight 900, "Simple" has gradient)
+   - Gradient text: linear-gradient(135deg, #ffffff 0%, #60a5fa 50%, #8b5cf6 100%)
+   - Subtitle: "Plan your journey from community college to UC or CSU..."
+   - Two CTA buttons side by side:
+     * Primary: "Download on App Store" (blue gradient with glow and shine effect on hover)
+     * Secondary: "Learn More" (glass effect with border)
+   - Floating phone mockup below (350x700px, animated with float keyframe)
+     * Dark gradient background
+     * Blue glowing border
+     * Placeholder emoji 📱 in center
+     * Animate: float up and down with slight rotation
+
+4. STATS SECTION:
+   - Three stats in a row:
+     * "100+ California Colleges"
+     * "24/7 AI Advisor Support"  
+     * "100% Free Forever"
+   - Large gradient numbers (56px, blue to purple gradient)
+   - Gray descriptive text below
+
+5. FEATURES SECTION:
+   - Section badge: "Features" (small, rounded, blue)
+   - Section title: "Everything You Need" (56px, bold)
+   - 2x2 grid of feature cards:
+     * Smart Roadmap 📚
+     * AI Advisor 🤖
+     * ASSIST Integration ✓
+     * GPA Tracking 📊
+   - Cards:
+     * Glass effect background: rgba(15, 23, 42, 0.5) with backdrop-blur
+     * Border: rgba(59, 130, 246, 0.1)
+     * Icon: 72x72px with blue gradient background
+     * Hover: lift up, increase border opacity, add blue glow shadow
+     * Top border line that appears on hover
+
+6. FINAL CTA SECTION:
+   - Horizontal line separator at top (gradient from transparent to blue to transparent)
+   - Heading: "Ready to Start?" (64px)
+   - Subtext: "Join thousands of students..."
+   - Primary CTA button: "Get Started Free"
+
+7. FOOTER:
+   - Top border with blue gradient line
+   - Left: "TransferUp" logo with gradient
+   - Right: Links to Privacy, Terms, Contact
+   - Center: Copyright text
+   - Links hover to blue color
+
+COLORS & STYLING:
+- Background: #000000 (pure black)
+- Primary blue: #3b82f6
+- Secondary blue: #2563eb
+- Purple accent: #8b5cf6
+- Text primary: #ffffff
+- Text secondary: #94a3b8
+- Text tertiary: #64748b
+
+ANIMATIONS:
+1. drift: 20s infinite - moves gradients around
+2. grid-move: 20s infinite - animates grid pattern
+3. float: 6s infinite - animates phone mockup up/down with rotation
+4. Hover animations: translateY(-8px) for cards, glow effects
+5. Button shine effect: ::before pseudo-element that sweeps across on hover
+
+TYPOGRAPHY:
+- Font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif
+- Hero heading: 96px, font-weight 900, letter-spacing -3px
+- Section titles: 56px, font-weight 900, letter-spacing -2px
+- Feature titles: 28px, font-weight 700
+- Body text: 17-20px
+
+RESPONSIVE BREAKPOINTS:
+At max-width 768px:
+- Hero heading: 48px
+- Section titles: 36px
+- Feature grid: 1 column
+- Stats grid: 1 column
+- Phone mockup: 280x560px
+- Stack CTA buttons vertically
+- Footer: stack logo and links vertically
+
+KEY FEATURES:
+- Glassmorphism: backdrop-filter: blur(20px)
+- Smooth transitions: transition: all 0.3s ease or 0.4s ease
+- Box shadows with blue glow on hover
+- Gradient text using background-clip: text
+- Position: relative for all animated elements with z-index layering
+
+OUTPUT:
+- Single file named: index.html
+- All CSS embedded in <style> tag
+- No external dependencies
+- Works when opened directly in browser
+- Ready to deploy to Netlify, Vercel, or GitHub Pages
+
+Make it look premium, modern, and engaging - like a high-end SaaS product landing page.
