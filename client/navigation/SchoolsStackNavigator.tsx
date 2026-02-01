@@ -26,7 +26,7 @@ export default function SchoolsStackNavigator() {
         name="Schools"
         component={SchoolsScreen}
         options={{
-          title: "Schools",
+          headerShown: false,
         }}
       />
       <Stack.Screen

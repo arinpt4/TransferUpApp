@@ -19,7 +19,7 @@ export default function AlertsStackNavigator() {
         name="Advisor"
         component={AdvisorScreen}
         options={{
-          title: "Transfer Advisor",
+          headerShown: false,
         }}
       />
     </Stack.Navigator>
