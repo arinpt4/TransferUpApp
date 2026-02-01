@@ -131,8 +131,8 @@ export default function OnboardingScreen({ onComplete }: OnboardingScreenProps) 
       <ThemedView style={[styles.container, { paddingTop: insets.top }]}>
         <KeyboardAvoidingView
           style={styles.keyboardAvoid}
-          behavior="padding"
-          keyboardVerticalOffset={0}
+          behavior="height"
+          keyboardVerticalOffset={-150}
         >
           <Animated.View
             entering={FadeInDown.duration(400)}
