@@ -1,6 +1,6 @@
 # Sources of Truth
 
-This document catalogs the authoritative sources for patterns, data structures, and conventions used throughout the Transfer Pathway Optimizer app.
+This document catalogs the authoritative sources for patterns, data structures, and conventions used throughout the TransferUp app.
 
 ## Color Scheme
 

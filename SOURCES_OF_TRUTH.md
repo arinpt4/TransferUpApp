@@ -1,6 +1,6 @@
 # Sources of Truth
 
-This document catalogs all reusable functions, utilities, services, and patterns in the Transfer Pathway Optimizer codebase.
+This document catalogs all reusable functions, utilities, services, and patterns in the TransferUp codebase.
 
 ---
 

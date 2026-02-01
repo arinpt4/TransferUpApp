@@ -1,8 +1,8 @@
-# Transfer Pathway Optimizer
+# TransferUp
 
 ## Overview
 
-Transfer Pathway Optimizer is a mobile-first application designed to help California community college students navigate complex transfer requirements to UC and CSU universities. The app integrates with the ASSIST.org API to provide articulation agreements, course equivalencies, and transfer planning tools.
+TransferUp is a mobile-first application designed to help California community college students navigate complex transfer requirements to UC and CSU universities. The app integrates with the ASSIST.org API to provide articulation agreements, course equivalencies, and transfer planning tools.
 
 The application follows an Expo React Native architecture with a Node.js Express backend, enabling deployment across iOS, Android, and web platforms from a single codebase.
 
