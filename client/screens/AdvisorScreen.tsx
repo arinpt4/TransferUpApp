@@ -228,7 +228,7 @@ export default function AdvisorScreen() {
       fontFamily: "Nunito_400Regular",
     },
     strong: {
-      color: theme.amber,
+      color: theme.blue,
       fontFamily: "Nunito_700Bold",
     },
     em: {
