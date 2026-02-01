@@ -10,7 +10,6 @@ import {
   ActivityIndicator,
   Alert,
 } from "react-native";
-import { useHeaderHeight } from "@react-navigation/elements";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
@@ -64,7 +63,6 @@ function getWelcomeMessage(userContext: UserContext | null): ChatMessage {
 }
 
 export default function AdvisorScreen() {
-  const headerHeight = useHeaderHeight();
   const tabBarHeight = useBottomTabBarHeight();
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
@@ -370,7 +368,7 @@ export default function AdvisorScreen() {
         keyExtractor={(_, index) => index.toString()}
         contentContainerStyle={[
           styles.messagesList,
-          { paddingTop: headerHeight + Spacing.md },
+          { paddingTop: insets.top + Spacing.md },
         ]}
         ListFooterComponent={renderTypingIndicator}
         onContentSizeChange={scrollToBottom}

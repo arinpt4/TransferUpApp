@@ -7,7 +7,6 @@ import {
   RefreshControl,
   Pressable,
 } from "react-native";
-import { useHeaderHeight } from "@react-navigation/elements";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
@@ -38,7 +37,6 @@ type FilterType = "all" | "CC" | "CSU" | "UC";
 type SchoolsNavigationProp = NativeStackNavigationProp<SchoolsStackParamList, "Schools">;
 
 export default function SchoolsScreen() {
-  const headerHeight = useHeaderHeight();
   const tabBarHeight = useBottomTabBarHeight();
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<SchoolsNavigationProp>();
@@ -159,7 +157,7 @@ export default function SchoolsScreen() {
           styles.container,
           {
             backgroundColor: theme.backgroundRoot,
-            paddingTop: headerHeight + Spacing.xl,
+            paddingTop: insets.top + Spacing.xl,
           },
         ]}
       >
@@ -369,7 +367,7 @@ export default function SchoolsScreen() {
           </>
         }
         contentContainerStyle={{
-          paddingTop: headerHeight + Spacing.xl,
+          paddingTop: insets.top + Spacing.xl,
           paddingBottom: tabBarHeight + Spacing["2xl"],
           paddingHorizontal: Spacing.lg,
         }}

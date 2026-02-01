@@ -6,8 +6,8 @@ import {
   RefreshControl,
   ScrollView,
 } from "react-native";
-import { useHeaderHeight } from "@react-navigation/elements";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -324,7 +324,7 @@ function QuickActionButton({
 }
 
 export default function HomeScreen() {
-  const headerHeight = useHeaderHeight();
+  const insets = useSafeAreaInsets();
   const tabBarHeight = useBottomTabBarHeight();
   const navigation = useNavigation();
   const { theme, isDark } = useTheme();
@@ -420,7 +420,7 @@ export default function HomeScreen() {
     <ScrollView
       style={[styles.container, { backgroundColor: theme.backgroundRoot }]}
       contentContainerStyle={{
-        paddingTop: headerHeight + Spacing["2xl"],
+        paddingTop: insets.top + Spacing["2xl"],
         paddingBottom: tabBarHeight + Spacing["3xl"],
         paddingHorizontal: Spacing.lg,
       }}

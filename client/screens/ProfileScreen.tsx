@@ -10,7 +10,6 @@ import {
   Alert,
   KeyboardAvoidingView,
 } from "react-native";
-import { useHeaderHeight } from "@react-navigation/elements";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
@@ -36,7 +35,6 @@ import {
 } from "@/lib/storage";
 
 export default function ProfileScreen() {
-  const headerHeight = useHeaderHeight();
   const tabBarHeight = useBottomTabBarHeight();
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
@@ -127,7 +125,7 @@ export default function ProfileScreen() {
     <KeyboardAwareScrollViewCompat
       style={{ flex: 1, backgroundColor: theme.backgroundRoot }}
       contentContainerStyle={{
-        paddingTop: headerHeight + Spacing.xl,
+        paddingTop: insets.top + Spacing.xl,
         paddingBottom: tabBarHeight + Spacing["2xl"],
         paddingHorizontal: Spacing.lg,
       }}
