@@ -7,7 +7,9 @@ import {
   Dimensions,
   TextInput,
   Pressable,
+  Platform,
 } from "react-native";
+import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
 import Animated, { FadeIn, FadeInUp, FadeInDown } from "react-native-reanimated";
@@ -127,47 +129,53 @@ export default function OnboardingScreen({ onComplete }: OnboardingScreenProps) 
   if (showNameInput) {
     return (
       <ThemedView style={[styles.container, { paddingTop: insets.top }]}>
-        <Animated.View
-          entering={FadeInDown.duration(400)}
-          style={styles.nameContainer}
+        <KeyboardAvoidingView
+          style={styles.keyboardAvoid}
+          behavior="padding"
+          keyboardVerticalOffset={0}
         >
-          <View style={styles.nameHeader}>
-            <ThemedText type="h1" style={styles.nameTitle}>
-              What's your name?
-            </ThemedText>
-            <ThemedText
-              type="body"
-              style={[styles.nameSubtitle, { color: theme.textSecondary }]}
-            >
-              We'll personalize your experience
-            </ThemedText>
-          </View>
-
-          <TextInput
-            style={[
-              styles.nameInput,
-              {
-                backgroundColor: theme.backgroundSecondary,
-                color: theme.text,
-                borderColor: theme.border,
-              },
-            ]}
-            placeholder="Enter your name"
-            placeholderTextColor={theme.textSecondary}
-            value={name}
-            onChangeText={setName}
-            autoFocus
-            autoCapitalize="words"
-          />
-
-          <Button
-            onPress={handleComplete}
-            disabled={!name.trim()}
-            style={styles.nameButton}
+          <Animated.View
+            entering={FadeInDown.duration(400)}
+            style={styles.nameContainer}
           >
-            Get Started
-          </Button>
-        </Animated.View>
+            <View style={styles.nameHeader}>
+              <ThemedText type="h1" style={styles.nameTitle}>
+                What's your name?
+              </ThemedText>
+              <ThemedText
+                type="body"
+                style={[styles.nameSubtitle, { color: theme.textSecondary }]}
+              >
+                We'll personalize your experience
+              </ThemedText>
+            </View>
+
+            <TextInput
+              style={[
+                styles.nameInput,
+                {
+                  backgroundColor: theme.backgroundSecondary,
+                  color: theme.text,
+                  borderColor: theme.border,
+                },
+              ]}
+              placeholder="Enter your name"
+              placeholderTextColor={theme.textSecondary}
+              value={name}
+              onChangeText={setName}
+              autoFocus
+              autoCapitalize="words"
+            />
+
+            <Button
+              onPress={handleComplete}
+              disabled={!name.trim()}
+              style={[styles.nameButton, { marginBottom: insets.bottom + Spacing.xl }]}
+            >
+              Get Started
+            </Button>
+          </Animated.View>
+        </KeyboardAvoidingView>
       </ThemedView>
     );
   }
@@ -222,6 +230,9 @@ export default function OnboardingScreen({ onComplete }: OnboardingScreenProps) 
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+  },
+  keyboardAvoid: {
     flex: 1,
   },
   skipContainer: {
