@@ -1,27 +1,27 @@
 {
   "expo": {
-    "name": "Transfer Pathway",
-    "slug": "transfer-pathway",
+    "name": "TransferUp",
+    "slug": "transferup",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "transferpathway",
+    "scheme": "transferup",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.transferpathway.app"
+      "bundleIdentifier": "com.transferup.app"
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#F59E0B",
+        "backgroundColor": "#3B82F6",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.transferpathway.app"
+      "package": "com.transferup.app"
     },
     "web": {
       "output": "single",

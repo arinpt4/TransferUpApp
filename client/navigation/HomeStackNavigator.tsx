@@ -22,7 +22,7 @@ export default function HomeStackNavigator() {
         name="Home"
         component={HomeScreen}
         options={{
-          headerTitle: () => <HeaderTitle title="Transfer Pathway" />,
+          headerTitle: () => <HeaderTitle title="TransferUp" />,
         }}
       />
       <Stack.Screen

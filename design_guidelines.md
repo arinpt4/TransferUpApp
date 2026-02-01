@@ -1,4 +1,4 @@
-# Transfer Pathway Optimizer - Design Guidelines
+# TransferUp - Design Guidelines
 
 ## Brand Identity
 

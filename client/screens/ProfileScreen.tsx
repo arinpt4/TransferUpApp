@@ -273,7 +273,7 @@ export default function ProfileScreen() {
           type="small"
           style={[styles.footerText, { color: theme.textSecondary }]}
         >
-          Transfer Pathway Optimizer v1.0.0
+          TransferUp v1.0.0
         </ThemedText>
       </Animated.View>
 
