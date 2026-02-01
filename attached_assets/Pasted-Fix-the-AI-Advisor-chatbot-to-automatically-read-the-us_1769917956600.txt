@@ -1,0 +1,94 @@
+Fix the AI Advisor chatbot to automatically read the user's saved community college and target university instead of asking for them every time.
+
+PROBLEM:
+- User has already selected their CC and target university in the Schools tab
+- This data is saved in AsyncStorage
+- Chatbot keeps asking "Which community college are you at?" instead of reading the saved data
+- Chatbot should know this information automatically
+
+FIX NEEDED:
+
+1. FIND WHERE SCHOOLS ARE STORED:
+   Locate which AsyncStorage keys store:
+   - Selected community college (likely 'selectedCollege' or 'communityCollege')
+   - Selected target university/universities (likely 'targetUniversities' or 'targetSchools')
+   - Selected major (if saved)
+
+2. LOAD SCHOOL DATA IN CHATBOT:
+   When the Advisor chat screen loads or when sending a message to the AI:
+   
+   a) Read from AsyncStorage:
+```javascript
+   const communityCollege = await AsyncStorage.getItem('selectedCollege');
+   const targetUniversities = await AsyncStorage.getItem('targetUniversities');
+   const selectedMajor = await AsyncStorage.getItem('selectedMajor'); // if exists
+```
+   
+   b) Parse the data (it's likely stored as JSON strings)
+   
+   c) Include this information in the system prompt or context sent to OpenAI
+
+3. UPDATE THE CHATBOT SYSTEM PROMPT:
+   When calling the OpenAI API, enhance the system prompt with user context:
+```javascript
+   const systemPrompt = `You are a helpful transfer advisor for California community college students. 
+   You have access to the ASSIST.org articulation database.
+   
+   IMPORTANT USER CONTEXT:
+   - The user is currently attending: ${communityCollege?.name || 'Not set'}
+   - The user wants to transfer to: ${targetUniversity?.name || 'Not set'}
+   - Target major: ${selectedMajor || 'Not set'}
+   
+   Since you already know their schools, do NOT ask them which community college they attend or which university they want to transfer to. 
+   Use this information to provide personalized advice.
+   
+   If they haven't set their schools yet, politely tell them to go to the Schools tab to select them.
+   
+   Help students understand transfer requirements, plan their courses, and answer questions about UC/CSU transfers. 
+   Be encouraging and concise.`;
+```
+
+4. HANDLE MISSING DATA:
+   If the user hasn't selected schools yet:
+   - First message from chatbot: "Hi! I see you haven't selected your schools yet. Please go to the Schools tab to choose your community college and target university, then I can help you with personalized transfer advice!"
+   - Include a note: "Once you've selected your schools, come back here and I'll know exactly where you're transferring from and to."
+
+5. UPDATE CHATBOT GREETING:
+   When user first opens the Advisor:
+   - If schools are set: "Hi! I see you're at [CC Name] and want to transfer to [University Name]. How can I help you plan your transfer?"
+   - If schools not set: "Hi! To give you the best advice, please select your schools in the Schools tab first."
+
+6. CONTEXT IN EVERY MESSAGE:
+   Every API call to OpenAI should include the user's school context in the system prompt or as a system message, so the AI always knows:
+   - Where the user is coming from (CC)
+   - Where they want to go (Target university)
+   - What major they're interested in
+
+7. ALLOW SCHOOL CHANGES:
+   If the user changes their selected schools in the Schools tab:
+   - The chatbot should detect this on next message
+   - Update the context automatically
+   - Optionally show a message: "I see you've changed your target school. I'll now provide advice for transferring to [New School]."
+
+8. FUNCTION CALLING INTEGRATION:
+   When the chatbot uses functions like get_agreements or get_articulation:
+   - Automatically use the saved institution codes
+   - Don't make the user provide school names again
+   - Example: If user asks "What courses do I need for CS?", automatically call get_agreements with their saved CC and university codes
+
+IMPLEMENTATION STEPS:
+1. Find the AsyncStorage keys for saved schools (check Schools tab code)
+2. Load this data when Advisor screen mounts
+3. Pass school context to OpenAI in system prompt
+4. Update welcome message based on whether schools are set
+5. Handle cases where schools aren't set yet
+6. Test: User selects schools → opens Advisor → chatbot should know their schools without asking
+
+EXPECTED BEHAVIOR AFTER FIX:
+- User selects "De Anza College" and "UC Berkeley" in Schools tab
+- User opens Advisor
+- Chatbot says: "Hi! I see you're at De Anza College and want to transfer to UC Berkeley. How can I help?"
+- User asks: "What courses do I need for Computer Science?"
+- Chatbot knows to look up De Anza → UC Berkeley articulation without asking which schools
+
+This should eliminate the repetitive questions and make the chatbot much smarter by using saved user data.

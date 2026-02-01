@@ -12,16 +12,47 @@ function getOpenAIClient(): OpenAI {
   return new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 }
 
-const SYSTEM_PROMPT = `You are a helpful transfer advisor for California community college students. You have access to the ASSIST.org articulation database.
+interface UserContext {
+  communityCollegeId: number | null;
+  communityCollegeName: string | null;
+  targetUniversities: { id: number; name: string }[];
+}
 
+function buildSystemPrompt(userContext?: UserContext): string {
+  let contextSection = "";
+  
+  if (userContext) {
+    const ccInfo = userContext.communityCollegeName 
+      ? `Community College: ${userContext.communityCollegeName} (ID: ${userContext.communityCollegeId})`
+      : "Community College: Not selected yet";
+    
+    const targetInfo = userContext.targetUniversities.length > 0
+      ? `Target Universities: ${userContext.targetUniversities.map(u => `${u.name} (ID: ${u.id})`).join(", ")}`
+      : "Target Universities: Not selected yet";
+    
+    contextSection = `
+IMPORTANT USER CONTEXT:
+${ccInfo}
+${targetInfo}
+
+Since you already know their schools, do NOT ask them which community college they attend or which university they want to transfer to unless they want to discuss a different school.
+When they ask about courses, majors, or requirements, automatically use their saved schools for lookups.
+If they haven't selected schools yet, politely suggest they go to the Schools tab to select them.
+`;
+  }
+
+  return `You are a helpful transfer advisor for California community college students. You have access to the ASSIST.org articulation database.
+${contextSection}
 IMPORTANT WORKFLOW:
-1. When a student mentions ANY school name (like "De Anza", "UC Berkeley", "Foothill", etc.), ALWAYS use search_institutions first to find the correct institution ID. Never assume you know the ID.
-2. School codes are internal - students will give you school names. Be flexible with names (e.g., "UC Berkeley" = "University of California, Berkeley").
-3. When searching for majors, use search_majors with flexible matching. Major names vary across institutions (e.g., "EECS" vs "Electrical Engineering and Computer Sciences", "CS" vs "Computer Science").
-4. If multiple schools match a search, ask the student to clarify which one they mean.
-5. If no articulation agreements exist between schools, explain this clearly and suggest alternatives.
+1. If you have the user's school context above, use those institution IDs directly when calling get_agreements, search_majors, or get_articulation.
+2. When a student mentions a DIFFERENT school name, use search_institutions to find the correct institution ID.
+3. School codes are internal - students will give you school names. Be flexible with names (e.g., "UC Berkeley" = "University of California, Berkeley").
+4. When searching for majors, use search_majors with flexible matching. Major names vary across institutions (e.g., "EECS" vs "Electrical Engineering and Computer Sciences", "CS" vs "Computer Science").
+5. If multiple schools match a search, ask the student to clarify which one they mean.
+6. If no articulation agreements exist between schools, explain this clearly and suggest alternatives.
 
 Be encouraging, concise, and helpful. Guide students through the transfer planning process step by step.`;
+}
 
 const tools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
   {
@@ -683,7 +714,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/chat", async (req, res) => {
     try {
-      const { message, history } = req.body;
+      const { message, history, userContext } = req.body;
 
       if (!message) {
         return res.status(400).json({ error: "message is required" });
@@ -693,8 +724,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(500).json({ error: "OpenAI API key not configured" });
       }
 
+      const systemPrompt = buildSystemPrompt(userContext);
+
       const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
-        { role: "system", content: SYSTEM_PROMPT },
+        { role: "system", content: systemPrompt },
         ...(history || []),
         { role: "user", content: message },
       ];

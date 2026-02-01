@@ -27,14 +27,41 @@ import {
   getChatHistory,
   saveChatHistory,
   clearChatHistory,
+  getUserProfile,
+  getCachedInstitutions,
   type ChatMessage,
+  type UserProfile,
+  type Institution,
 } from "@/lib/storage";
 import { getApiUrl } from "@/lib/query-client";
 
-const WELCOME_MESSAGE: ChatMessage = {
-  role: "assistant",
-  content: "Hi! I'm your transfer advisor. Ask me anything about transferring from your community college to a UC or CSU.",
-};
+interface UserContext {
+  communityCollegeId: number | null;
+  communityCollegeName: string | null;
+  targetUniversities: { id: number; name: string }[];
+}
+
+function getWelcomeMessage(userContext: UserContext | null): ChatMessage {
+  if (!userContext || (!userContext.communityCollegeName && userContext.targetUniversities.length === 0)) {
+    return {
+      role: "assistant",
+      content: "Hi! I'm your transfer advisor. To give you personalized guidance, please go to the **Schools** tab and select your community college and target universities. Once you've done that, I'll know exactly where you're transferring from and to!",
+    };
+  }
+
+  const ccPart = userContext.communityCollegeName
+    ? `you're at **${userContext.communityCollegeName}**`
+    : "you haven't selected a community college yet";
+
+  const targetPart = userContext.targetUniversities.length > 0
+    ? `want to transfer to **${userContext.targetUniversities.map(u => u.name).join(", ")}**`
+    : "haven't selected target universities yet";
+
+  return {
+    role: "assistant",
+    content: `Hi! I see ${ccPart} and ${targetPart}. How can I help you plan your transfer today?`,
+  };
+}
 
 export default function AdvisorScreen() {
   const headerHeight = useHeaderHeight();
@@ -47,21 +74,53 @@ export default function AdvisorScreen() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputText, setInputText] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [userContext, setUserContext] = useState<UserContext | null>(null);
+
+  const loadUserContext = useCallback(async (): Promise<UserContext | null> => {
+    const profile = await getUserProfile();
+    if (!profile) return null;
+
+    const targetUniversities: { id: number; name: string }[] = [];
+    
+    if (profile.targetUniversityIds && profile.targetUniversityIds.length > 0) {
+      const cachedInstitutions = await getCachedInstitutions();
+      if (cachedInstitutions) {
+        for (const id of profile.targetUniversityIds) {
+          const inst = cachedInstitutions.find(i => i.id === id);
+          if (inst) {
+            targetUniversities.push({ id: inst.id, name: inst.name });
+          }
+        }
+      }
+    }
+
+    return {
+      communityCollegeId: profile.communityCollegeId,
+      communityCollegeName: profile.communityCollegeName,
+      targetUniversities,
+    };
+  }, []);
 
   const loadHistory = useCallback(async () => {
+    const context = await loadUserContext();
+    setUserContext(context);
+    
     const history = await getChatHistory();
     if (history.length === 0) {
-      setMessages([WELCOME_MESSAGE]);
+      setMessages([getWelcomeMessage(context)]);
     } else {
       setMessages(history);
     }
-  }, []);
+  }, [loadUserContext]);
 
   useEffect(() => {
     loadHistory();
   }, [loadHistory]);
 
-  const handleClearChat = useCallback(() => {
+  const handleClearChat = useCallback(async () => {
+    const context = await loadUserContext();
+    setUserContext(context);
+    
     Alert.alert(
       "Clear Chat",
       "Are you sure you want to clear the chat history?",
@@ -73,12 +132,12 @@ export default function AdvisorScreen() {
           onPress: async () => {
             await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
             await clearChatHistory();
-            setMessages([WELCOME_MESSAGE]);
+            setMessages([getWelcomeMessage(context)]);
           },
         },
       ]
     );
-  }, []);
+  }, [loadUserContext]);
 
   useEffect(() => {
     navigation.setOptions({
@@ -114,8 +173,11 @@ export default function AdvisorScreen() {
     scrollToBottom();
 
     try {
+      const context = await loadUserContext();
+      setUserContext(context);
+      
       const historyForApi = newMessages
-        .filter((m) => m !== WELCOME_MESSAGE)
+        .filter((m) => m.role === "user" || m.role === "assistant")
         .slice(-10)
         .map((m) => ({ role: m.role, content: m.content }));
 
@@ -126,6 +188,7 @@ export default function AdvisorScreen() {
         body: JSON.stringify({
           message: trimmedText,
           history: historyForApi.slice(0, -1),
+          userContext: context,
         }),
       });
 
