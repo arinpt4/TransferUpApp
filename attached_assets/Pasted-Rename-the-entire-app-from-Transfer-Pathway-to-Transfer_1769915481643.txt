@@ -1,0 +1,73 @@
+Rename the entire app from "Transfer Pathway" to "TransferUp" throughout the codebase:
+
+1. UPDATE APP CONFIGURATION FILES:
+   - app.json: Change "name" field to "TransferUp"
+   - app.json: Change "displayName" to "TransferUp"
+   - package.json: Change "name" to "transferup" (lowercase, no spaces)
+   - app.config.js (if exists): Update all name references
+
+2. UPDATE ALL TEXT IN THE APP:
+   Search the entire codebase for these variations and replace:
+   - "Transfer Pathway" → "TransferUp"
+   - "transfer pathway" → "TransferUp"
+   - "transfer-pathway" → "transfer-up"
+   - "TransferPathway" → "TransferUp"
+   - "transfer_pathway" → "transfer_up"
+   - "TRANSFER PATHWAY" → "TRANSFERUP"
+
+3. SPECIFIC FILES TO UPDATE:
+   - Home screen: Header/title
+   - Onboarding screens: All 3 slides mentioning the app name
+   - Settings/Profile screen: App name, about section
+   - README.md: Project title and description
+   - Any documentation files
+   - Splash screen text (if applicable)
+   - About page or app info section
+
+4. UPDATE COMMENTS AND DOCUMENTATION:
+   - Code comments mentioning "Transfer Pathway"
+   - JSDoc comments
+   - README sections
+   - Any inline documentation
+
+5. BUNDLE IDENTIFIERS (if needed):
+   - iOS bundle identifier in app.json: "com.yourname.transferup"
+   - Android package name in app.json: "com.yourname.transferup"
+   - Update any associated configuration
+
+6. ASSETS (if text-based):
+   - If logo includes text "Transfer Pathway", note that it needs updating
+   - Splash screen if it has app name
+   - Any images with embedded text
+
+7. DATABASE/STORAGE KEYS:
+   - Check AsyncStorage keys - if any include "transferPathway" or similar
+   - Update if necessary to avoid data loss: either migrate old keys or keep them for backwards compatibility
+
+8. EXAMPLES OF WHERE TO LOOK:
+   - Navigation headers/titles
+   - Empty state messages
+   - Error messages mentioning the app
+   - Welcome/greeting text
+   - Footer text
+   - Legal/copyright text
+
+9. DO A GLOBAL SEARCH:
+   Search the entire project for:
+   - "Pathway" (review each instance)
+   - "pathway" (review each instance)
+   Make sure you don't accidentally change variable names or code logic, only user-facing text and app identifiers.
+
+10. TEST AFTER RENAMING:
+   - App launches successfully
+   - App name appears correctly in device app list
+   - All screens show "TransferUp" where appropriate
+   - No broken references or missing text
+
+IMPORTANT:
+- Be careful with variable names - only change app name references, not code variables
+- Don't break any functionality
+- Make sure AsyncStorage keys remain compatible (users shouldn't lose data)
+- Update any hardcoded strings that mention the old name
+
+After completing this, the app should be fully branded as "TransferUp" with no references to "Transfer Pathway" remaining.
