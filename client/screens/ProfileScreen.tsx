@@ -117,10 +117,6 @@ export default function ProfileScreen() {
     }
   };
 
-  const completedCourses = courses.filter((c) => c.completed);
-  const totalUnits = courses.reduce((sum, c) => sum + c.units, 0);
-  const completedUnits = completedCourses.reduce((sum, c) => sum + c.units, 0);
-
   return (
     <KeyboardAwareScrollViewCompat
       style={{ flex: 1, backgroundColor: theme.backgroundRoot }}
@@ -157,41 +153,6 @@ export default function ProfileScreen() {
       </Animated.View>
 
       <Animated.View entering={FadeInDown.delay(100).duration(400)}>
-        <View style={styles.statsGrid}>
-          <View
-            style={[styles.statCard, { backgroundColor: theme.backgroundDefault }]}
-          >
-            <ThemedText type="h2" style={{ color: theme.primary }}>
-              {profile?.gpa?.toFixed(2) || "--"}
-            </ThemedText>
-            <ThemedText type="small" style={{ color: theme.textSecondary }}>
-              Current GPA
-            </ThemedText>
-          </View>
-          <View
-            style={[styles.statCard, { backgroundColor: theme.backgroundDefault }]}
-          >
-            <ThemedText type="h2" style={{ color: theme.success }}>
-              {completedUnits}
-            </ThemedText>
-            <ThemedText type="small" style={{ color: theme.textSecondary }}>
-              Units Done
-            </ThemedText>
-          </View>
-          <View
-            style={[styles.statCard, { backgroundColor: theme.backgroundDefault }]}
-          >
-            <ThemedText type="h2" style={{ color: theme.secondary }}>
-              {courses.length}
-            </ThemedText>
-            <ThemedText type="small" style={{ color: theme.textSecondary }}>
-              Total Courses
-            </ThemedText>
-          </View>
-        </View>
-      </Animated.View>
-
-      <Animated.View entering={FadeInDown.delay(200).duration(400)}>
         <ThemedText type="h3" style={styles.sectionTitle}>
           Quick Tools
         </ThemedText>
