@@ -89,6 +89,26 @@ The articulation API response contains:
 - **PostgreSQL**: Configured via `DATABASE_URL` environment variable
 - **Drizzle ORM**: Type-safe database client with Zod validation schemas
 
+### AI Transfer Advisor
+The Advisor tab features an AI-powered chatbot that helps students plan their transfer:
+
+**Data Access**: The advisor automatically receives:
+- User's community college and target universities
+- Selected majors per university
+- Complete roadmap data (completed, in-progress, and planned courses with grades)
+- Calculated GPA and unit counts
+
+**Key Behaviors**:
+- Does NOT ask users to list their courses - it already has this data
+- References specific courses from the user's roadmap by name and code
+- Uses ASSIST.org tools to look up official transfer requirements
+- Proactively suggests what courses to take next based on prerequisites
+- Warns about gaps or missing requirements in the user's plan
+
+**Storage Functions** (client/lib/storage.ts):
+- `getRoadmapDataForAdvisor()` - Aggregates all course data for the advisor
+- `getAllSelectedMajors()` - Gets all majors the user has selected
+
 ### Key Frontend Libraries
 - `expo-haptics`: Tactile feedback for touch interactions
 - `expo-blur`, `expo-glass-effect`: Visual effects for iOS-style UI
