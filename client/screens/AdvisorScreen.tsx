@@ -277,13 +277,13 @@ export default function AdvisorScreen() {
       marginVertical: 2,
     },
     bullet_list_icon: {
-      color: theme.amber,
+      color: theme.primary,
       fontSize: 14,
       marginRight: Spacing.xs,
     },
     code_inline: {
       backgroundColor: theme.backgroundTertiary,
-      color: theme.amber,
+      color: theme.primary,
       fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
       fontSize: 13,
       paddingHorizontal: 4,
