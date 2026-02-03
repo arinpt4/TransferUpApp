@@ -28,9 +28,13 @@ import {
   clearChatHistory,
   getUserProfile,
   getCachedInstitutions,
+  getRoadmapDataForAdvisor,
+  getAllSelectedMajors,
   type ChatMessage,
   type UserProfile,
   type Institution,
+  type RoadmapData,
+  type SelectedMajor,
 } from "@/lib/storage";
 import { getApiUrl } from "@/lib/query-client";
 
@@ -38,6 +42,9 @@ interface UserContext {
   communityCollegeId: number | null;
   communityCollegeName: string | null;
   targetUniversities: { id: number; name: string }[];
+  gpa: number | null;
+  roadmap: RoadmapData | null;
+  selectedMajors: SelectedMajor[];
 }
 
 function getWelcomeMessage(userContext: UserContext | null): ChatMessage {
@@ -92,10 +99,16 @@ export default function AdvisorScreen() {
       }
     }
 
+    const roadmap = await getRoadmapDataForAdvisor();
+    const selectedMajors = await getAllSelectedMajors();
+
     return {
       communityCollegeId: profile.communityCollegeId,
       communityCollegeName: profile.communityCollegeName,
       targetUniversities,
+      gpa: profile.gpa,
+      roadmap,
+      selectedMajors,
     };
   }, []);
 

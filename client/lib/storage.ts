@@ -368,3 +368,83 @@ export async function clearSelectedMajor(receivingId: number): Promise<void> {
     console.error("Error clearing selected major:", err);
   }
 }
+
+export interface RoadmapCourseInfo {
+  code: string;
+  title: string;
+  units: number;
+  grade?: CourseGrade;
+  semester?: string;
+}
+
+export interface RoadmapData {
+  completedCourses: RoadmapCourseInfo[];
+  inProgressCourses: RoadmapCourseInfo[];
+  plannedCourses: RoadmapCourseInfo[];
+  totalUnits: number;
+  completedUnits: number;
+  inProgressUnits: number;
+  plannedUnits: number;
+  calculatedGPA: number;
+}
+
+export async function getRoadmapDataForAdvisor(): Promise<RoadmapData> {
+  const roadmapMode = await getRoadmapMode();
+  const periods = roadmapMode === "quarter" ? await getQuarters() : await getSemesters();
+  const courses = await getCourses();
+  
+  const periodMap = new Map(periods.map(p => [p.id, p.name]));
+  
+  const completedCourses: RoadmapCourseInfo[] = [];
+  const inProgressCourses: RoadmapCourseInfo[] = [];
+  const plannedCourses: RoadmapCourseInfo[] = [];
+  
+  let completedUnits = 0;
+  let inProgressUnits = 0;
+  let plannedUnits = 0;
+  
+  for (const course of courses) {
+    const periodName = periodMap.get(course.semesterId) || "Unknown";
+    const courseInfo: RoadmapCourseInfo = {
+      code: course.code,
+      title: course.title,
+      units: course.units,
+      semester: periodName,
+    };
+    
+    if (course.status === "taken") {
+      completedCourses.push({ ...courseInfo, grade: course.grade });
+      completedUnits += course.units;
+    } else if (course.status === "in_progress") {
+      inProgressCourses.push(courseInfo);
+      inProgressUnits += course.units;
+    } else {
+      plannedCourses.push(courseInfo);
+      plannedUnits += course.units;
+    }
+  }
+  
+  const { gpa } = calculateGPA(courses);
+  
+  return {
+    completedCourses,
+    inProgressCourses,
+    plannedCourses,
+    totalUnits: completedUnits + inProgressUnits + plannedUnits,
+    completedUnits,
+    inProgressUnits,
+    plannedUnits,
+    calculatedGPA: gpa,
+  };
+}
+
+export async function getAllSelectedMajors(): Promise<SelectedMajor[]> {
+  try {
+    const value = await AsyncStorage.getItem(STORAGE_KEYS.SELECTED_MAJORS);
+    if (!value) return [];
+    const majorsMap: SelectedMajorsMap = JSON.parse(value);
+    return Object.values(majorsMap);
+  } catch {
+    return [];
+  }
+}

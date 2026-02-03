@@ -12,10 +12,40 @@ function getOpenAIClient(): OpenAI {
   return new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 }
 
+interface RoadmapCourseInfo {
+  code: string;
+  title: string;
+  units: number;
+  grade?: string;
+  semester?: string;
+}
+
+interface RoadmapData {
+  completedCourses: RoadmapCourseInfo[];
+  inProgressCourses: RoadmapCourseInfo[];
+  plannedCourses: RoadmapCourseInfo[];
+  totalUnits: number;
+  completedUnits: number;
+  inProgressUnits: number;
+  plannedUnits: number;
+  calculatedGPA: number;
+}
+
+interface SelectedMajor {
+  label: string;
+  key: string;
+  sendingId: number;
+  receivingId: number;
+  receivingName: string;
+}
+
 interface UserContext {
   communityCollegeId: number | null;
   communityCollegeName: string | null;
   targetUniversities: { id: number; name: string }[];
+  gpa: number | null;
+  roadmap: RoadmapData | null;
+  selectedMajors: SelectedMajor[];
 }
 
 function buildSystemPrompt(userContext?: UserContext): string {
@@ -30,28 +60,85 @@ function buildSystemPrompt(userContext?: UserContext): string {
       ? `Target Universities: ${userContext.targetUniversities.map(u => `${u.name} (ID: ${u.id})`).join(", ")}`
       : "Target Universities: Not selected yet";
     
+    const majorsInfo = userContext.selectedMajors && userContext.selectedMajors.length > 0
+      ? `Selected Majors: ${userContext.selectedMajors.map(m => `${m.label} at ${m.receivingName}`).join("; ")}`
+      : "Selected Majors: None selected yet";
+    
+    let roadmapSection = "";
+    if (userContext.roadmap) {
+      const r = userContext.roadmap;
+      
+      const completedList = r.completedCourses.length > 0
+        ? r.completedCourses.map(c => `  - ${c.code}: ${c.title} (${c.units} units${c.grade ? `, Grade: ${c.grade}` : ""})`).join("\n")
+        : "  (None yet)";
+      
+      const inProgressList = r.inProgressCourses.length > 0
+        ? r.inProgressCourses.map(c => `  - ${c.code}: ${c.title} (${c.units} units)`).join("\n")
+        : "  (None)";
+      
+      const plannedList = r.plannedCourses.length > 0
+        ? r.plannedCourses.map(c => `  - ${c.code}: ${c.title} (${c.units} units, ${c.semester})`).join("\n")
+        : "  (None)";
+      
+      const gpaDisplay = r.calculatedGPA > 0 ? r.calculatedGPA.toFixed(2) : "N/A";
+      
+      roadmapSection = `
+
+STUDENT'S COURSE PROGRESS:
+Current GPA: ${gpaDisplay}
+Total Units in Roadmap: ${r.totalUnits} (Completed: ${r.completedUnits}, In Progress: ${r.inProgressUnits}, Planned: ${r.plannedUnits})
+
+COMPLETED COURSES (${r.completedCourses.length}):
+${completedList}
+
+IN PROGRESS COURSES (${r.inProgressCourses.length}):
+${inProgressList}
+
+PLANNED COURSES (${r.plannedCourses.length}):
+${plannedList}`;
+    }
+    
     contextSection = `
-IMPORTANT USER CONTEXT:
+=== STUDENT PROFILE ===
 ${ccInfo}
 ${targetInfo}
+${majorsInfo}
+${roadmapSection}
 
-Since you already know their schools, do NOT ask them which community college they attend or which university they want to transfer to unless they want to discuss a different school.
-When they ask about courses, majors, or requirements, automatically use their saved schools for lookups.
-If they haven't selected schools yet, politely suggest they go to the Schools tab to select them.
+=== CRITICAL INSTRUCTIONS ===
+1. You ALREADY HAVE all their course data above. DO NOT ask them to list their completed or planned courses.
+2. When they ask "What courses do I still need?", analyze their completed/in-progress courses against their major requirements using the ASSIST.org tools.
+3. When they ask about their GPA, use the calculated GPA above.
+4. When they ask about progress, calculate and tell them exactly how many more courses/units they need.
+5. Be PROACTIVE: suggest what they should take next semester based on prerequisites and their current plan.
+6. Reference SPECIFIC courses they've completed or need to take by name and code.
+7. Warn about any gaps, missing prerequisites, or potential issues in their plan.
 `;
   }
 
-  return `You are a helpful transfer advisor for California community college students. You have access to the ASSIST.org articulation database.
+  return `You are an expert transfer advisor for California community college students. You have full access to:
+1. The ASSIST.org articulation database (course equivalencies between schools)
+2. The student's complete course history, progress, and planned courses (shown below)
+
 ${contextSection}
+
+ADVISOR CAPABILITIES:
+- Answer questions using their actual course data without asking them to list courses
+- Look up transfer requirements from ASSIST.org using the tools provided
+- Calculate remaining courses/units needed for transfer
+- Suggest optimal course sequences based on prerequisites
+- Identify potential problems or gaps in their transfer plan
+- Provide GPA calculations and projections
+
 IMPORTANT WORKFLOW:
 1. If you have the user's school context above, use those institution IDs directly when calling get_agreements, search_majors, or get_articulation.
 2. When a student mentions a DIFFERENT school name, use search_institutions to find the correct institution ID.
 3. School codes are internal - students will give you school names. Be flexible with names (e.g., "UC Berkeley" = "University of California, Berkeley").
-4. When searching for majors, use search_majors with flexible matching. Major names vary across institutions (e.g., "EECS" vs "Electrical Engineering and Computer Sciences", "CS" vs "Computer Science").
-5. If multiple schools match a search, ask the student to clarify which one they mean.
-6. If no articulation agreements exist between schools, explain this clearly and suggest alternatives.
+4. When searching for majors, use search_majors with flexible matching. Major names vary across institutions (e.g., "EECS" vs "Electrical Engineering and Computer Sciences").
+5. If multiple schools match a search, ask the student to clarify.
+6. If no articulation agreements exist, explain clearly and suggest alternatives.
 
-Be encouraging, concise, and helpful. Guide students through the transfer planning process step by step.`;
+Be encouraging, specific, and actionable. Provide concrete advice based on their actual progress.`;
 }
 
 const tools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
