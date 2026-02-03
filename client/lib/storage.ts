@@ -13,6 +13,7 @@ const STORAGE_KEYS = {
   CACHED_INSTITUTIONS: "cached_institutions",
   CHAT_HISTORY: "chatHistory",
   THEME: "theme",
+  SELECTED_MAJORS: "selected_majors",
 } as const;
 
 export type RoadmapMode = "semester" | "quarter";
@@ -320,4 +321,50 @@ function generateDefaultQuarters(): Semester[] {
 
 export function generateId(): string {
   return Date.now().toString(36) + Math.random().toString(36).substr(2);
+}
+
+export interface SelectedMajor {
+  label: string;
+  key: string;
+  sendingId: number;
+  receivingId: number;
+  receivingName: string;
+}
+
+interface SelectedMajorsMap {
+  [universityId: string]: SelectedMajor;
+}
+
+export async function getSelectedMajor(receivingId: number): Promise<SelectedMajor | null> {
+  try {
+    const value = await AsyncStorage.getItem(STORAGE_KEYS.SELECTED_MAJORS);
+    if (!value) return null;
+    const majorsMap: SelectedMajorsMap = JSON.parse(value);
+    return majorsMap[receivingId.toString()] || null;
+  } catch {
+    return null;
+  }
+}
+
+export async function saveSelectedMajor(major: SelectedMajor): Promise<void> {
+  try {
+    const value = await AsyncStorage.getItem(STORAGE_KEYS.SELECTED_MAJORS);
+    const majorsMap: SelectedMajorsMap = value ? JSON.parse(value) : {};
+    majorsMap[major.receivingId.toString()] = major;
+    await AsyncStorage.setItem(STORAGE_KEYS.SELECTED_MAJORS, JSON.stringify(majorsMap));
+  } catch (err) {
+    console.error("Error saving selected major:", err);
+  }
+}
+
+export async function clearSelectedMajor(receivingId: number): Promise<void> {
+  try {
+    const value = await AsyncStorage.getItem(STORAGE_KEYS.SELECTED_MAJORS);
+    if (!value) return;
+    const majorsMap: SelectedMajorsMap = JSON.parse(value);
+    delete majorsMap[receivingId.toString()];
+    await AsyncStorage.setItem(STORAGE_KEYS.SELECTED_MAJORS, JSON.stringify(majorsMap));
+  } catch (err) {
+    console.error("Error clearing selected major:", err);
+  }
 }

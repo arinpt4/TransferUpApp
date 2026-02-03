@@ -1,0 +1,112 @@
+Fix the AI Advisor to be smarter and access the user's profile data automatically.
+
+PROBLEM:
+- Advisor just repeats information the user can already see
+- When asked "What courses do I still need?", it asks the user to list their completed courses
+- Advisor should automatically access roadmap data and know what courses are complete/planned
+
+FIX:
+
+1. GIVE ADVISOR ACCESS TO USER'S ROADMAP DATA:
+   When sending a message to the chatbot, include this context in the system prompt:
+```javascript
+   // Read user's roadmap data
+   const roadmapData = await AsyncStorage.getItem('semesters'); // or 'quarters'
+   const parsedRoadmap = JSON.parse(roadmapData);
+   
+   // Extract completed and in-progress courses
+   const completedCourses = [];
+   const inProgressCourses = [];
+   const plannedCourses = [];
+   
+   parsedRoadmap.forEach(semester => {
+     semester.courses.forEach(course => {
+       if (course.status === 'Taken') {
+         completedCourses.push({
+           code: course.courseCode,
+           title: course.title,
+           units: course.units,
+           grade: course.grade
+         });
+       } else if (course.status === 'In Progress') {
+         inProgressCourses.push({
+           code: course.courseCode,
+           title: course.title,
+           units: course.units
+         });
+       } else {
+         plannedCourses.push({
+           code: course.courseCode,
+           title: course.title,
+           units: course.units,
+           semester: semester.name
+         });
+       }
+     });
+   });
+```
+
+2. UPDATE SYSTEM PROMPT WITH THIS DATA:
+```javascript
+   const systemPrompt = `You are a helpful transfer advisor for California community college students.
+   
+   USER CONTEXT:
+   - Community College: ${communityCollege}
+   - Target University: ${targetUniversity}
+   - Major: ${selectedMajor}
+   - Current GPA: ${gpa}
+   
+   COMPLETED COURSES:
+   ${completedCourses.map(c => `- ${c.code}: ${c.title} (${c.units} units, Grade: ${c.grade})`).join('\n')}
+   
+   IN PROGRESS COURSES:
+   ${inProgressCourses.map(c => `- ${c.code}: ${c.title} (${c.units} units)`).join('\n')}
+   
+   PLANNED COURSES:
+   ${plannedCourses.map(c => `- ${c.code}: ${c.title} (${c.units} units, ${c.semester})`).join('\n')}
+   
+   IMPORTANT:
+   - You already have access to all their course data above
+   - DO NOT ask them to list courses - you can see them
+   - When they ask "What do I still need?", analyze their completed courses against the major requirements
+   - Provide specific, actionable advice based on their actual progress
+   - Reference specific courses they've completed or need to take
+   
+   Be proactive and insightful, not just reactive. Anticipate what they need to know.`;
+```
+
+3. MAKE ADVISOR PROACTIVE:
+   Instead of just answering questions, the advisor should:
+   - Analyze gaps in their course plan
+   - Suggest courses they should take next semester
+   - Warn about missing prerequisites
+   - Remind about important requirements they haven't started
+   - Calculate how many more units/courses needed
+
+4. EXAMPLE INTERACTIONS:
+   
+   BAD (current):
+   User: "What courses do I still need?"
+   Advisor: "Can you tell me which courses you've completed?"
+   
+   GOOD (after fix):
+   User: "What courses do I still need?"
+   Advisor: "Based on your roadmap, you've completed MATH 1A and ENGL 1A. For Computer Science at UC Berkeley, you still need:
+   - MATH 1B (should take next semester)
+   - CS 61A equivalent (CIS 22A at De Anza)
+   - PHYS 4A (can wait until next year)
+   You're on track! Focus on MATH 1B next."
+
+5. ADD SMART FEATURES:
+   - If user asks about GPA: automatically calculate and show it
+   - If user asks about progress: show percentage complete
+   - If user asks what to take next: suggest based on prerequisites and their schedule
+   - If user asks about transferability: check ASSIST data automatically
+
+6. UPDATE FUNCTION CALLING:
+   Add a new function the AI can call:
+   - Function name: "get_user_roadmap"
+   - Returns the user's current course plan with statuses
+   - AI can call this if it needs to reference specific course data mid-conversation
+
+This will make the advisor actually useful instead of just a fancy search engine that makes users do the work.
