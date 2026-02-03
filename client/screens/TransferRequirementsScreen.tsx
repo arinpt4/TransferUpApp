@@ -31,9 +31,12 @@ import {
   getQuarters,
   getRoadmapMode,
   generateId,
+  getSelectedMajor,
+  saveSelectedMajor,
   type Course,
   type Semester,
   type RoadmapMode,
+  type SelectedMajor,
 } from "@/lib/storage";
 
 interface Major {
@@ -150,9 +153,18 @@ export default function TransferRequirementsScreen() {
   }, []);
 
   useEffect(() => {
-    loadMajors();
-    loadExistingData();
-  }, [loadMajors, loadExistingData]);
+    const initializeScreen = async () => {
+      await loadMajors();
+      await loadExistingData();
+      
+      const savedMajor = await getSelectedMajor(receivingId);
+      if (savedMajor && savedMajor.sendingId === sendingId) {
+        setSelectedMajor({ label: savedMajor.label, key: savedMajor.key });
+        loadCourses({ label: savedMajor.label, key: savedMajor.key });
+      }
+    };
+    initializeScreen();
+  }, [loadMajors, loadExistingData, receivingId, sendingId, loadCourses]);
 
   // Reload roadmap mode and periods when screen gets focus (in case user changed mode on Roadmap screen)
   useEffect(() => {
@@ -169,11 +181,25 @@ export default function TransferRequirementsScreen() {
     setRefreshing(false);
   };
 
-  const selectMajor = (major: Major) => {
+  const selectMajor = async (major: Major) => {
     setSelectedMajor(major);
     setSearchQuery("");
     setSelectedCourses(new Set());
     loadCourses(major);
+    
+    await saveSelectedMajor({
+      label: major.label,
+      key: major.key,
+      sendingId,
+      receivingId,
+      receivingName,
+    });
+  };
+
+  const changeMajor = () => {
+    setSelectedMajor(null);
+    setAgreements([]);
+    setSelectedCourses(new Set());
   };
 
   const getCourseKey = (agreementId: string, courseCode: string) => 
@@ -543,22 +569,25 @@ export default function TransferRequirementsScreen() {
 
         {selectedMajor ? (
           <View style={styles.selectedMajorHeader}>
-            <Pressable
-              onPress={() => {
-                setSelectedMajor(null);
-                setAgreements([]);
-                setSelectedCourses(new Set());
-              }}
-              style={styles.backButton}
-            >
-              <Feather name="arrow-left" size={18} color={theme.link} />
-              <ThemedText type="link" style={{ color: theme.link, marginLeft: 4 }}>
-                Back to Majors
-              </ThemedText>
-            </Pressable>
-            <ThemedText type="h4" numberOfLines={2} style={{ marginTop: Spacing.sm }}>
-              {selectedMajor.label}
-            </ThemedText>
+            <View style={styles.majorHeaderRow}>
+              <View style={{ flex: 1 }}>
+                <ThemedText type="small" style={{ color: theme.textSecondary }}>
+                  Currently viewing
+                </ThemedText>
+                <ThemedText type="h4" numberOfLines={2} style={{ marginTop: 2 }}>
+                  {selectedMajor.label}
+                </ThemedText>
+              </View>
+              <Pressable
+                onPress={changeMajor}
+                style={[styles.changeMajorButton, { borderColor: theme.primary }]}
+              >
+                <Feather name="refresh-cw" size={14} color={theme.primary} />
+                <ThemedText type="small" style={{ color: theme.primary, marginLeft: 4, fontWeight: "600" }}>
+                  Change Major
+                </ThemedText>
+              </Pressable>
+            </View>
           </View>
         ) : null}
       </View>
@@ -723,6 +752,19 @@ const styles = StyleSheet.create({
   },
   selectedMajorHeader: {
     marginTop: Spacing.md,
+  },
+  majorHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  changeMajorButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
   },
   backButton: {
     flexDirection: "row",
