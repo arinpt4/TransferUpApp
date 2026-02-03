@@ -28,6 +28,7 @@ import {
   saveUserProfile,
   getCachedInstitutions,
   saveCachedInstitutions,
+  clearSelectedMajor,
   type Institution,
   type UserProfile,
 } from "@/lib/storage";
@@ -120,6 +121,10 @@ export default function SchoolsScreen() {
     const updatedTargets = isSelected
       ? currentTargets.filter((id) => id !== institution.id)
       : [...currentTargets, institution.id];
+
+    if (isSelected) {
+      await clearSelectedMajor(institution.id);
+    }
 
     const updatedProfile: UserProfile = {
       name: profile?.name || "",
