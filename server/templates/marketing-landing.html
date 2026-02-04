@@ -299,43 +299,17 @@
         .phone-screen {
             width: calc(100% - 16px);
             height: calc(100% - 16px);
-            background: linear-gradient(180deg, #1e3a5f 0%, #0f172a 50%, #1e293b 100%);
+            background: #0f172a;
             border-radius: 36px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 60px 20px 20px;
+            overflow: hidden;
+            position: relative;
         }
 
-        .phone-app-icon {
-            width: 80px;
-            height: 80px;
-            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
-            border-radius: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 16px;
-            box-shadow: 0 8px 32px rgba(59, 130, 246, 0.4);
-        }
-
-        .phone-app-icon svg {
-            width: 40px;
-            height: 40px;
-        }
-
-        .phone-app-name {
-            font-size: 18px;
-            font-weight: 700;
-            color: #ffffff;
-            margin-bottom: 8px;
-        }
-
-        .phone-app-tagline {
-            font-size: 12px;
-            color: #94a3b8;
-            text-align: center;
+        .phone-screenshot {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: top center;
         }
 
         @keyframes float {
@@ -597,16 +571,6 @@
                 height: 560px;
             }
 
-            .phone-app-icon {
-                width: 60px;
-                height: 60px;
-            }
-
-            .phone-app-icon svg {
-                width: 30px;
-                height: 30px;
-            }
-
             .stats-grid {
                 grid-template-columns: 1fr;
                 gap: 20px;
@@ -688,14 +652,7 @@
             </div>
             <div class="phone-mockup">
                 <div class="phone-screen">
-                    <div class="phone-app-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                            <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                        </svg>
-                    </div>
-                    <div class="phone-app-name">TransferUp</div>
-                    <div class="phone-app-tagline">Your transfer journey starts here</div>
+                    <img src="images/app-screenshot.png" alt="TransferUp App Screenshot" class="phone-screenshot">
                 </div>
             </div>
         </section>

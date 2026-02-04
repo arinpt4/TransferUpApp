@@ -179,6 +179,10 @@ function configureExpoAndLanding(app: express.Application) {
 
   log("Serving static Expo files with dynamic manifest routing");
 
+  // Serve static images for marketing page
+  const imagesPath = path.resolve(process.cwd(), "server", "templates", "images");
+  app.use("/images", express.static(imagesPath));
+
   app.get("/marketing", (_req: Request, res: Response) => {
     res.setHeader("Content-Type", "text/html; charset=utf-8");
     res.status(200).send(marketingPageTemplate);
