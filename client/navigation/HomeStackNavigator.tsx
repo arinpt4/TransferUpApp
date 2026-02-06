@@ -28,7 +28,7 @@ export default function HomeStackNavigator() {
         name="GPACalculator"
         component={GPACalculatorScreen}
         options={{
-          title: "GPA Calculator",
+          title: "",
         }}
       />
     </Stack.Navigator>

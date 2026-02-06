@@ -310,13 +310,13 @@ function QuickActionButton({
           style={styles.quickActionGradient}
         >
           <View style={styles.quickActionIconContainer}>
-            <Feather name={icon} size={20} color="#FFFFFF" />
+            <Feather name={icon} size={16} color="#FFFFFF" />
           </View>
           <View style={styles.quickActionTextContainer}>
             <ThemedText style={styles.quickActionLabel}>{label}</ThemedText>
             <ThemedText style={styles.quickActionDescription}>{description}</ThemedText>
           </View>
-          <Feather name="chevron-right" size={20} color="#93C5FD" />
+          <Feather name="chevron-right" size={18} color="#93C5FD" />
         </LinearGradient>
       </Pressable>
     </Animated.View>
@@ -718,38 +718,39 @@ const styles = StyleSheet.create({
     borderRadius: 2,
   },
   quickActionsContainer: {
-    gap: Spacing.md,
+    gap: Spacing.sm,
   },
   quickActionButton: {
-    borderRadius: BorderRadius.xl,
+    borderRadius: BorderRadius.lg,
     overflow: "hidden",
     ...Shadows.blue,
   },
   quickActionGradient: {
     flexDirection: "row",
     alignItems: "center",
-    padding: Spacing.lg,
+    paddingVertical: Spacing.sm + 2,
+    paddingHorizontal: Spacing.md,
   },
   quickActionIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: BorderRadius.md,
+    width: 32,
+    height: 32,
+    borderRadius: BorderRadius.sm,
     backgroundColor: "rgba(255, 255, 255, 0.1)",
     alignItems: "center",
     justifyContent: "center",
-    marginRight: Spacing.md,
+    marginRight: Spacing.sm,
   },
   quickActionTextContainer: {
     flex: 1,
   },
   quickActionLabel: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "600",
     color: "#FFFFFF",
   },
   quickActionDescription: {
-    fontSize: 12,
+    fontSize: 11,
     color: "#93C5FD",
-    marginTop: 2,
+    marginTop: 1,
   },
 });
