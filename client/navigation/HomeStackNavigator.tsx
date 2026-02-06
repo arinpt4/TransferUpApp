@@ -28,7 +28,10 @@ export default function HomeStackNavigator() {
         name="GPACalculator"
         component={GPACalculatorScreen}
         options={{
-          title: "GPA Calculator",
+          headerTitle: "",
+          headerShadowVisible: false,
+          headerStyle: { backgroundColor: "transparent" },
+          headerTransparent: true,
           animation: "none",
         }}
       />
