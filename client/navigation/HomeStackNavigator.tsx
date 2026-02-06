@@ -28,10 +28,7 @@ export default function HomeStackNavigator() {
         name="GPACalculator"
         component={GPACalculatorScreen}
         options={{
-          headerTitle: "",
-          headerShadowVisible: false,
-          headerStyle: { backgroundColor: "transparent" },
-          headerTransparent: true,
+          headerShown: false,
           animation: "none",
         }}
       />
