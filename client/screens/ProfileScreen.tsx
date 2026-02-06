@@ -237,7 +237,7 @@ export default function ProfileScreen() {
         </ThemedText>
 
         <Pressable
-          onPress={() => Linking.openURL('https://transferupapp.com/privacy-policy.html')}
+          onPress={() => Linking.openURL('https://transferup.github.io/transferup/')}
           style={({ pressed }) => [
             styles.settingRow,
             {
