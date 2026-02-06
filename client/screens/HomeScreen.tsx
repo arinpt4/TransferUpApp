@@ -47,8 +47,8 @@ import {
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
-const GIANT_RING_SIZE = 240;
-const GIANT_RING_STROKE = 16;
+const GIANT_RING_SIZE = 180;
+const GIANT_RING_STROKE = 14;
 const GIANT_RING_RADIUS = (GIANT_RING_SIZE - GIANT_RING_STROKE) / 2;
 const GIANT_RING_CIRCUMFERENCE = 2 * Math.PI * GIANT_RING_RADIUS;
 
@@ -207,7 +207,7 @@ function CourseCard({
         >
           <Feather
             name="book-open"
-            size={20}
+            size={16}
             color={isInProgress ? "#FFFFFF" : theme.textSecondary}
           />
         </View>
@@ -420,8 +420,8 @@ export default function HomeScreen() {
     <ScrollView
       style={[styles.container, { backgroundColor: theme.backgroundRoot }]}
       contentContainerStyle={{
-        paddingTop: insets.top + Spacing["2xl"],
-        paddingBottom: tabBarHeight + Spacing["3xl"],
+        paddingTop: insets.top + Spacing.sm,
+        paddingBottom: tabBarHeight + Spacing.lg,
         paddingHorizontal: Spacing.lg,
       }}
       refreshControl={
@@ -559,24 +559,24 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
-    marginBottom: Spacing["2xl"],
+    marginBottom: Spacing.md,
   },
   headerTextContainer: {
     flex: 1,
   },
   greeting: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: "600",
-    lineHeight: 36,
-    marginBottom: 6,
+    lineHeight: 30,
+    marginBottom: 2,
   },
   subtitle: {
-    fontSize: 14,
-    lineHeight: 20,
+    fontSize: 13,
+    lineHeight: 18,
   },
   settingsButton: {
-    width: 48,
-    height: 48,
+    width: 40,
+    height: 40,
     borderRadius: BorderRadius.xl,
     borderWidth: 1,
     alignItems: "center",
@@ -585,8 +585,8 @@ const styles = StyleSheet.create({
   giantRingContainer: {
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: Spacing["xl"],
-    marginTop: Spacing.md,
+    marginBottom: Spacing.sm,
+    marginTop: 0,
     width: GIANT_RING_SIZE,
     height: GIANT_RING_SIZE,
     alignSelf: "center",
@@ -613,61 +613,61 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   giantRingPercent: {
-    fontSize: 44,
+    fontSize: 36,
     fontWeight: "700",
-    lineHeight: 52,
+    lineHeight: 42,
   },
   giantRingLabel: {
-    fontSize: 14,
-    marginTop: 2,
+    fontSize: 12,
+    marginTop: 1,
   },
   miniStatsRow: {
     flexDirection: "row",
     gap: Spacing.sm,
-    marginBottom: Spacing["2xl"],
+    marginBottom: Spacing.md,
   },
   miniStatCard: {
     flex: 1,
     borderWidth: 1,
-    borderRadius: BorderRadius.xl,
-    padding: Spacing.lg,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.md,
     alignItems: "center",
   },
   miniStatValue: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: "700",
   },
   miniStatLabel: {
-    fontSize: 12,
-    marginTop: 4,
+    fontSize: 11,
+    marginTop: 2,
   },
   sectionTitle: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "600",
-    marginBottom: Spacing.md,
+    marginBottom: Spacing.sm,
     textTransform: "uppercase",
     letterSpacing: 0.5,
   },
   coursesContainer: {
-    gap: Spacing.md,
-    marginBottom: Spacing["2xl"],
+    gap: Spacing.sm,
+    marginBottom: Spacing.md,
   },
   courseCard: {
     borderWidth: 1,
-    borderRadius: BorderRadius.xl,
-    padding: Spacing.lg,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.md,
   },
   courseCardRow: {
     flexDirection: "row",
     alignItems: "flex-start",
   },
   courseIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: BorderRadius.md,
+    width: 34,
+    height: 34,
+    borderRadius: BorderRadius.sm,
     alignItems: "center",
     justifyContent: "center",
-    marginRight: Spacing.md,
+    marginRight: Spacing.sm,
   },
   courseCardContent: {
     flex: 1,
@@ -679,7 +679,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   courseCode: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "600",
   },
   statusBadge: {
@@ -692,8 +692,8 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   courseTitle: {
-    fontSize: 14,
-    marginBottom: Spacing.sm,
+    fontSize: 13,
+    marginBottom: Spacing.xs,
   },
   courseCardFooter: {
     flexDirection: "row",
