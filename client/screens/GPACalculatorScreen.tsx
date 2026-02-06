@@ -5,8 +5,8 @@ import {
   Pressable,
   ScrollView,
 } from "react-native";
+import { useHeaderHeight } from "@react-navigation/elements";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import { BlurView } from "expo-blur";
 import { Feather } from "@expo/vector-icons";
@@ -26,8 +26,8 @@ import {
 } from "@/lib/storage";
 
 export default function GPACalculatorScreen() {
+  const headerHeight = useHeaderHeight();
   const insets = useSafeAreaInsets();
-  const navigation = useNavigation();
   const { theme, isDark } = useTheme();
 
   const [courses, setCourses] = useState<Course[]>([]);
@@ -58,27 +58,14 @@ export default function GPACalculatorScreen() {
     : ["#3B82F6", "#2563EB", "#1D4ED8"] as const;
 
   return (
-    <View style={{ flex: 1, backgroundColor: theme.backgroundRoot }}>
-      <Pressable
-        onPress={() => navigation.goBack()}
-        style={[
-          styles.backButton,
-          {
-            top: insets.top + Spacing.sm,
-            backgroundColor: isDark ? "rgba(15, 23, 42, 0.6)" : "rgba(241, 245, 249, 0.8)",
-          },
-        ]}
-      >
-        <Feather name="arrow-left" size={22} color={theme.text} />
-      </Pressable>
-      <ScrollView
-        style={{ flex: 1 }}
-        contentContainerStyle={{
-          paddingTop: insets.top + Spacing["3xl"] + Spacing.md,
-          paddingBottom: insets.bottom + Spacing["3xl"],
-          paddingHorizontal: Spacing.lg,
-        }}
-      >
+    <ScrollView
+      style={{ flex: 1, backgroundColor: theme.backgroundRoot }}
+      contentContainerStyle={{
+        paddingTop: Math.max(headerHeight, insets.top) + Spacing.xl,
+        paddingBottom: insets.bottom + Spacing["3xl"],
+        paddingHorizontal: Spacing.lg,
+      }}
+    >
       <Animated.View entering={FadeInUp.duration(600)}>
         <View style={styles.gpaContainer}>
           <LinearGradient
@@ -231,8 +218,7 @@ export default function GPACalculatorScreen() {
           </View>
         </Card>
       </Animated.View>
-      </ScrollView>
-    </View>
+    </ScrollView>
   );
 }
 
@@ -331,15 +317,5 @@ const styles = StyleSheet.create({
   legendItem: {
     width: 50,
     alignItems: "center",
-  },
-  backButton: {
-    position: "absolute",
-    left: Spacing.lg,
-    zIndex: 10,
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    alignItems: "center",
-    justifyContent: "center",
   },
 });

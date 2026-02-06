@@ -47,8 +47,8 @@ import {
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
-const GIANT_RING_SIZE = 200;
-const GIANT_RING_STROKE = 14;
+const GIANT_RING_SIZE = 240;
+const GIANT_RING_STROKE = 16;
 const GIANT_RING_RADIUS = (GIANT_RING_SIZE - GIANT_RING_STROKE) / 2;
 const GIANT_RING_CIRCUMFERENCE = 2 * Math.PI * GIANT_RING_RADIUS;
 
@@ -585,8 +585,8 @@ const styles = StyleSheet.create({
   giantRingContainer: {
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: Spacing.md,
-    marginTop: Spacing.xs,
+    marginBottom: Spacing.lg,
+    marginTop: Spacing.sm,
     width: GIANT_RING_SIZE,
     height: GIANT_RING_SIZE,
     alignSelf: "center",
@@ -613,12 +613,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   giantRingPercent: {
-    fontSize: 40,
+    fontSize: 44,
     fontWeight: "700",
-    lineHeight: 46,
+    lineHeight: 52,
   },
   giantRingLabel: {
-    fontSize: 13,
+    fontSize: 14,
     marginTop: 2,
   },
   miniStatsRow: {
@@ -629,17 +629,18 @@ const styles = StyleSheet.create({
   miniStatCard: {
     flex: 1,
     borderWidth: 1,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.md,
+    borderRadius: BorderRadius.xl,
+    paddingVertical: Spacing.lg,
+    paddingHorizontal: Spacing.md,
     alignItems: "center",
   },
   miniStatValue: {
-    fontSize: 22,
+    fontSize: 26,
     fontWeight: "700",
   },
   miniStatLabel: {
     fontSize: 12,
-    marginTop: 2,
+    marginTop: 4,
   },
   sectionTitle: {
     fontSize: 13,
