@@ -47,7 +47,7 @@ import {
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
-const GIANT_RING_SIZE = 180;
+const GIANT_RING_SIZE = 200;
 const GIANT_RING_STROKE = 14;
 const GIANT_RING_RADIUS = (GIANT_RING_SIZE - GIANT_RING_STROKE) / 2;
 const GIANT_RING_CIRCUMFERENCE = 2 * Math.PI * GIANT_RING_RADIUS;
@@ -420,7 +420,7 @@ export default function HomeScreen() {
     <ScrollView
       style={[styles.container, { backgroundColor: theme.backgroundRoot }]}
       contentContainerStyle={{
-        paddingTop: insets.top + Spacing.sm,
+        paddingTop: insets.top + Spacing.md,
         paddingBottom: tabBarHeight + Spacing.lg,
         paddingHorizontal: Spacing.lg,
       }}
@@ -559,24 +559,24 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
-    marginBottom: Spacing.md,
+    marginBottom: Spacing.lg,
   },
   headerTextContainer: {
     flex: 1,
   },
   greeting: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: "600",
-    lineHeight: 30,
-    marginBottom: 2,
+    lineHeight: 32,
+    marginBottom: 4,
   },
   subtitle: {
-    fontSize: 13,
-    lineHeight: 18,
+    fontSize: 14,
+    lineHeight: 20,
   },
   settingsButton: {
-    width: 40,
-    height: 40,
+    width: 44,
+    height: 44,
     borderRadius: BorderRadius.xl,
     borderWidth: 1,
     alignItems: "center",
@@ -585,8 +585,8 @@ const styles = StyleSheet.create({
   giantRingContainer: {
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: Spacing.sm,
-    marginTop: 0,
+    marginBottom: Spacing.md,
+    marginTop: Spacing.xs,
     width: GIANT_RING_SIZE,
     height: GIANT_RING_SIZE,
     alignSelf: "center",
@@ -613,18 +613,18 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   giantRingPercent: {
-    fontSize: 36,
+    fontSize: 40,
     fontWeight: "700",
-    lineHeight: 42,
+    lineHeight: 46,
   },
   giantRingLabel: {
-    fontSize: 12,
-    marginTop: 1,
+    fontSize: 13,
+    marginTop: 2,
   },
   miniStatsRow: {
     flexDirection: "row",
     gap: Spacing.sm,
-    marginBottom: Spacing.md,
+    marginBottom: Spacing.lg,
   },
   miniStatCard: {
     flex: 1,
@@ -634,11 +634,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   miniStatValue: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: "700",
   },
   miniStatLabel: {
-    fontSize: 11,
+    fontSize: 12,
     marginTop: 2,
   },
   sectionTitle: {
