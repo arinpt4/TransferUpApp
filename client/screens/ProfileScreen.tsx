@@ -9,6 +9,7 @@ import {
   Platform,
   Alert,
   KeyboardAvoidingView,
+  Linking,
 } from "react-native";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -226,6 +227,32 @@ export default function ProfileScreen() {
           <ThemedText type="body" style={{ color: theme.error, marginLeft: Spacing.md }}>
             Clear All Data
           </ThemedText>
+        </Pressable>
+
+      </Animated.View>
+
+      <Animated.View entering={FadeInDown.delay(500).duration(400)}>
+        <ThemedText type="h3" style={styles.sectionTitle}>
+          Legal
+        </ThemedText>
+
+        <Pressable
+          onPress={() => Linking.openURL('https://transferupapp.com/privacy-policy.html')}
+          style={({ pressed }) => [
+            styles.settingRow,
+            {
+              backgroundColor: theme.backgroundDefault,
+              opacity: pressed ? 0.7 : 1,
+            },
+          ]}
+        >
+          <View style={styles.settingContent}>
+            <Feather name="shield" size={20} color={theme.primary} />
+            <ThemedText type="body" style={{ marginLeft: Spacing.md }}>
+              Privacy Policy
+            </ThemedText>
+          </View>
+          <Feather name="chevron-right" size={20} color={theme.textSecondary} />
         </Pressable>
 
         <ThemedText
