@@ -423,7 +423,7 @@ export default function AdvisorScreen() {
       <View style={styles.modalOverlay}>
         <View style={[styles.modalContent, { backgroundColor: theme.backgroundDefault }]}>
           <View style={[styles.modalIconContainer, { backgroundColor: `${theme.primary}15` }]}>
-            <Feather name="cpu" size={28} color={theme.primary} />
+            <Feather name="message-circle" size={28} color={theme.primary} />
           </View>
 
           <ThemedText type="h3" style={styles.modalTitle}>
