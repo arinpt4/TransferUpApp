@@ -507,14 +507,11 @@ export default function AdvisorScreen() {
     return (
       <View style={[styles.container, { backgroundColor: theme.backgroundRoot }]}>
         <View style={[styles.centeredContent, { paddingHorizontal: Spacing.xl }]}>
-          <View style={[styles.disabledIcon, { backgroundColor: `${theme.textSecondary}15` }]}>
-            <Feather name="cpu" size={40} color={theme.textSecondary} />
-          </View>
-          <ThemedText type="h3" style={styles.disabledTitle}>
+          <ThemedText type="h1" style={styles.disabledTitle}>
             AI Advisor is Disabled
           </ThemedText>
           <ThemedText
-            type="body"
+            type="h4"
             style={[styles.disabledText, { color: theme.textSecondary }]}
           >
             Enable it in Settings to get personalized transfer advice.
@@ -765,22 +762,16 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.md,
     alignItems: "center",
   },
-  disabledIcon: {
-    width: 80,
-    height: 80,
-    borderRadius: BorderRadius.full,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: Spacing.xl,
-  },
   disabledTitle: {
     textAlign: "center",
-    marginBottom: Spacing.sm,
+    marginBottom: Spacing.lg,
+    fontSize: 28,
   },
   disabledText: {
     textAlign: "center",
-    lineHeight: 22,
-    marginBottom: Spacing.xl,
+    lineHeight: 26,
+    marginBottom: Spacing["2xl"],
+    fontSize: 17,
   },
   settingsLink: {
     flexDirection: "row",
