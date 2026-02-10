@@ -521,8 +521,7 @@ export default function AdvisorScreen() {
             style={[styles.settingsLink, { backgroundColor: `${theme.primary}15` }]}
             testID="button-go-to-settings"
           >
-            <Feather name="settings" size={18} color={theme.primary} />
-            <ThemedText type="body" style={{ color: theme.primary, marginLeft: Spacing.sm }}>
+            <ThemedText type="body" style={{ color: theme.primary }}>
               Go to Settings
             </ThemedText>
           </Pressable>
