@@ -10,14 +10,14 @@ import {
   ScrollView,
   Platform,
 } from "react-native";
-import { KeyboardAvoidingView } from "react-native-keyboard-controller";
+import { useReanimatedKeyboardAnimation } from "react-native-keyboard-controller";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
-import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
+import Animated, { FadeIn, FadeInDown, useAnimatedStyle } from "react-native-reanimated";
 
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
@@ -54,6 +54,10 @@ export default function RoadmapScreen() {
   const navigation = useNavigation();
   const { theme } = useTheme();
   const flatListRef = useRef<FlatList>(null);
+  const { height: keyboardHeight } = useReanimatedKeyboardAnimation();
+  const addModalAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: keyboardHeight.value }],
+  }));
 
   const [courses, setCourses] = useState<Course[]>([]);
   const [semesters, setSemesters] = useState<Semester[]>([]);
@@ -446,12 +450,8 @@ export default function RoadmapScreen() {
         transparent
         onRequestClose={() => setShowAddModal(false)}
       >
-        <KeyboardAvoidingView
-          style={styles.modalOverlay}
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
-        >
-          <ThemedView style={styles.modalContent}>
+        <View style={styles.modalOverlay}>
+          <Animated.View style={[styles.modalContent, { backgroundColor: theme.backgroundDefault }, addModalAnimatedStyle]}>
             <View style={styles.addModalHeader}>
               <ThemedText style={styles.addModalTitle}>Add Course</ThemedText>
               <Pressable
@@ -661,8 +661,8 @@ export default function RoadmapScreen() {
                 Add Course
               </Button>
             </ScrollView>
-          </ThemedView>
-        </KeyboardAvoidingView>
+          </Animated.View>
+        </View>
       </Modal>
 
       <Modal
