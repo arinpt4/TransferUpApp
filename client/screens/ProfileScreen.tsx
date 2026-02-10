@@ -31,6 +31,8 @@ import {
   saveUserProfile,
   getCourses,
   clearAllData,
+  getAIAdvisorConsent,
+  saveAIAdvisorConsent,
   type UserProfile,
   type Course,
 } from "@/lib/storage";
@@ -45,14 +47,18 @@ export default function ProfileScreen() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editName, setEditName] = useState("");
+  const [aiAdvisorEnabled, setAiAdvisorEnabled] = useState(false);
+  const [showConsentModal, setShowConsentModal] = useState(false);
 
   const loadData = useCallback(async () => {
-    const [userProfile, userCourses] = await Promise.all([
+    const [userProfile, userCourses, aiConsent] = await Promise.all([
       getUserProfile(),
       getCourses(),
+      getAIAdvisorConsent(),
     ]);
     setProfile(userProfile);
     setCourses(userCourses);
+    setAiAdvisorEnabled(aiConsent === true);
     if (userProfile?.name) {
       setEditName(userProfile.name);
     }
@@ -84,6 +90,28 @@ export default function ProfileScreen() {
   const handleToggleDarkMode = async () => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     await setThemePreference(isDark ? "light" : "dark");
+  };
+
+  const handleToggleAIAdvisor = async () => {
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    if (aiAdvisorEnabled) {
+      await saveAIAdvisorConsent(false);
+      setAiAdvisorEnabled(false);
+    } else {
+      setShowConsentModal(true);
+    }
+  };
+
+  const handleAcceptConsent = async () => {
+    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    await saveAIAdvisorConsent(true);
+    setAiAdvisorEnabled(true);
+    setShowConsentModal(false);
+  };
+
+  const handleDeclineConsent = async () => {
+    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+    setShowConsentModal(false);
   };
 
   const handleClearData = async () => {
@@ -206,6 +234,32 @@ export default function ProfileScreen() {
           />
         </Pressable>
 
+        <Pressable
+          onPress={handleToggleAIAdvisor}
+          style={[styles.settingRow, { backgroundColor: theme.backgroundDefault }]}
+        >
+          <View style={{ flex: 1 }}>
+            <View style={styles.settingContent}>
+              <Feather name="cpu" size={20} color={theme.text} />
+              <ThemedText type="body" style={{ marginLeft: Spacing.md }}>
+                AI Advisor
+              </ThemedText>
+            </View>
+            <ThemedText
+              type="small"
+              style={{ color: theme.textSecondary, marginLeft: 36, marginTop: 2 }}
+            >
+              Sends messages to OpenAI for processing
+            </ThemedText>
+          </View>
+          <Switch
+            value={aiAdvisorEnabled}
+            onValueChange={handleToggleAIAdvisor}
+            trackColor={{ false: theme.backgroundTertiary, true: theme.primary }}
+            thumbColor="#FFFFFF"
+          />
+        </Pressable>
+
       </Animated.View>
 
       <Animated.View entering={FadeInDown.delay(400).duration(400)}>
@@ -307,6 +361,80 @@ export default function ProfileScreen() {
             </Button>
           </ThemedView>
         </KeyboardAvoidingView>
+      </Modal>
+
+      <Modal
+        visible={showConsentModal}
+        animationType="fade"
+        transparent
+        onRequestClose={handleDeclineConsent}
+      >
+        <View style={styles.consentOverlay}>
+          <View style={[styles.consentContent, { backgroundColor: theme.backgroundDefault }]}>
+            <View style={[styles.consentIconContainer, { backgroundColor: `${theme.primary}15` }]}>
+              <Feather name="cpu" size={28} color={theme.primary} />
+            </View>
+
+            <ThemedText type="h3" style={styles.consentTitle}>
+              AI Advisor Uses OpenAI
+            </ThemedText>
+
+            <ThemedText type="body" style={[styles.consentText, { color: theme.textSecondary }]}>
+              To provide helpful transfer advice, your messages and course information will be sent to OpenAI's servers for processing.
+            </ThemedText>
+
+            <ThemedText type="body" style={[styles.consentSubheading, { color: theme.text }]}>
+              Data shared includes:
+            </ThemedText>
+
+            <View style={styles.consentDataList}>
+              <View style={styles.consentDataItem}>
+                <Feather name="message-circle" size={16} color={theme.primary} />
+                <ThemedText type="body" style={[styles.consentDataItemText, { color: theme.textSecondary }]}>
+                  Your questions and messages
+                </ThemedText>
+              </View>
+              <View style={styles.consentDataItem}>
+                <Feather name="book" size={16} color={theme.primary} />
+                <ThemedText type="body" style={[styles.consentDataItemText, { color: theme.textSecondary }]}>
+                  Your selected schools and major
+                </ThemedText>
+              </View>
+              <View style={styles.consentDataItem}>
+                <Feather name="list" size={16} color={theme.primary} />
+                <ThemedText type="body" style={[styles.consentDataItemText, { color: theme.textSecondary }]}>
+                  Your completed courses (when relevant)
+                </ThemedText>
+              </View>
+            </View>
+
+            <ThemedText type="small" style={[styles.consentDisclaimer, { color: theme.textSecondary }]}>
+              OpenAI processes this data according to their privacy policy. Messages are not used to train AI models and are retained temporarily for abuse monitoring.
+            </ThemedText>
+
+            <View style={styles.consentButtons}>
+              <Pressable
+                onPress={handleAcceptConsent}
+                style={[styles.consentAcceptButton, { backgroundColor: theme.primary }]}
+                testID="button-settings-accept-consent"
+              >
+                <ThemedText type="body" style={{ color: "#FFFFFF", fontFamily: "Nunito_700Bold" }}>
+                  Accept & Continue
+                </ThemedText>
+              </Pressable>
+
+              <Pressable
+                onPress={handleDeclineConsent}
+                style={[styles.consentDeclineButton, { backgroundColor: theme.backgroundTertiary }]}
+                testID="button-settings-decline-consent"
+              >
+                <ThemedText type="body" style={{ color: theme.textSecondary }}>
+                  Decline
+                </ThemedText>
+              </Pressable>
+            </View>
+          </View>
+        </View>
       </Modal>
 
     </KeyboardAwareScrollViewCompat>
@@ -421,5 +549,68 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
     fontSize: 16,
     borderWidth: 1,
+  },
+  consentOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.6)",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: Spacing.lg,
+  },
+  consentContent: {
+    width: "100%",
+    maxWidth: 400,
+    borderRadius: BorderRadius["2xl"],
+    padding: Spacing.xl,
+  },
+  consentIconContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: BorderRadius.full,
+    alignItems: "center",
+    justifyContent: "center",
+    alignSelf: "center",
+    marginBottom: Spacing.lg,
+  },
+  consentTitle: {
+    textAlign: "center",
+    marginBottom: Spacing.lg,
+  },
+  consentText: {
+    lineHeight: 22,
+    marginBottom: Spacing.lg,
+  },
+  consentSubheading: {
+    fontFamily: "Nunito_700Bold",
+    marginBottom: Spacing.sm,
+  },
+  consentDataList: {
+    gap: Spacing.sm,
+    marginBottom: Spacing.lg,
+  },
+  consentDataItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+  },
+  consentDataItemText: {
+    flex: 1,
+  },
+  consentDisclaimer: {
+    lineHeight: 18,
+    marginBottom: Spacing.lg,
+  },
+  consentButtons: {
+    gap: Spacing.sm,
+  },
+  consentAcceptButton: {
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.md,
+    alignItems: "center",
+  },
+  consentDeclineButton: {
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.md,
+    alignItems: "center",
   },
 });
