@@ -240,7 +240,7 @@ export default function ProfileScreen() {
         >
           <View style={{ flex: 1 }}>
             <View style={styles.settingContent}>
-              <Feather name="cpu" size={20} color={theme.text} />
+              <Feather name="message-circle" size={20} color={theme.text} />
               <ThemedText type="body" style={{ marginLeft: Spacing.md }}>
                 AI Advisor
               </ThemedText>
@@ -372,7 +372,7 @@ export default function ProfileScreen() {
         <View style={styles.consentOverlay}>
           <View style={[styles.consentContent, { backgroundColor: theme.backgroundDefault }]}>
             <View style={[styles.consentIconContainer, { backgroundColor: `${theme.primary}15` }]}>
-              <Feather name="cpu" size={28} color={theme.primary} />
+              <Feather name="message-circle" size={28} color={theme.primary} />
             </View>
 
             <ThemedText type="h3" style={styles.consentTitle}>
