@@ -637,6 +637,8 @@ const styles = StyleSheet.create({
   miniStatValue: {
     fontSize: 26,
     fontWeight: "700",
+    lineHeight: 34,
+    paddingTop: 2,
   },
   miniStatLabel: {
     fontSize: 12,
