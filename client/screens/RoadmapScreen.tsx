@@ -452,215 +452,215 @@ export default function RoadmapScreen() {
           keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
         >
           <ThemedView style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <ThemedText type="h3">Add Course</ThemedText>
+            <View style={styles.addModalHeader}>
+              <ThemedText style={styles.addModalTitle}>Add Course</ThemedText>
               <Pressable
                 onPress={() => setShowAddModal(false)}
                 hitSlop={12}
               >
-                <Feather name="x" size={24} color={theme.text} />
+                <Feather name="x" size={20} color={theme.text} />
               </Pressable>
             </View>
 
-            <ThemedText
-              type="small"
-              style={[styles.modalLabel, { color: theme.textSecondary }]}
+            <ScrollView
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+              bounces={false}
+              contentContainerStyle={styles.addModalScroll}
             >
-              Adding to: {semesters[currentSemesterIndex]?.name}
-            </ThemedText>
-
-            <View style={styles.inputGroup}>
-              <ThemedText type="small" style={styles.label}>
-                Course Code (Optional)
+              <ThemedText
+                style={[styles.addModalSubtitle, { color: theme.textSecondary }]}
+              >
+                Adding to: {semesters[currentSemesterIndex]?.name}
               </ThemedText>
-              <TextInput
-                style={[
-                  styles.input,
-                  {
-                    backgroundColor: theme.backgroundSecondary,
-                    color: theme.text,
-                    borderColor: theme.border,
-                  },
-                ]}
-                placeholder="e.g., MATH 101"
-                placeholderTextColor={theme.textSecondary}
-                value={newCourse.code}
-                onChangeText={(text) =>
-                  setNewCourse({ ...newCourse, code: text })
-                }
-                autoCapitalize="characters"
-              />
-            </View>
 
-            <View style={styles.inputGroup}>
-              <ThemedText type="small" style={styles.label}>
-                Course Title
-              </ThemedText>
-              <TextInput
-                style={[
-                  styles.input,
-                  {
-                    backgroundColor: theme.backgroundSecondary,
-                    color: theme.text,
-                    borderColor: theme.border,
-                  },
-                ]}
-                placeholder="e.g., Calculus I"
-                placeholderTextColor={theme.textSecondary}
-                value={newCourse.title}
-                onChangeText={(text) =>
-                  setNewCourse({ ...newCourse, title: text })
-                }
-              />
-            </View>
-
-            <View style={styles.rowInputs}>
-              <View style={[styles.inputGroup, { flex: 1 }]}>
-                <ThemedText type="small" style={styles.label}>
-                  Units
+              <View style={styles.addInputGroup}>
+                <ThemedText style={[styles.addLabel, { color: theme.textSecondary }]}>
+                  Course Code (Optional)
                 </ThemedText>
                 <TextInput
                   style={[
-                    styles.input,
+                    styles.addInput,
                     {
                       backgroundColor: theme.backgroundSecondary,
                       color: theme.text,
                       borderColor: theme.border,
                     },
                   ]}
-                  placeholder="3"
+                  placeholder="e.g., MATH 101"
                   placeholderTextColor={theme.textSecondary}
-                  value={newCourse.units}
+                  value={newCourse.code}
                   onChangeText={(text) =>
-                    setNewCourse({ ...newCourse, units: text })
+                    setNewCourse({ ...newCourse, code: text })
                   }
-                  keyboardType="number-pad"
+                  autoCapitalize="characters"
                 />
               </View>
 
-              <View style={[styles.inputGroup, { flex: 2 }]}>
-                <ThemedText type="small" style={styles.label}>
-                  Category
+              <View style={styles.addInputGroup}>
+                <ThemedText style={[styles.addLabel, { color: theme.textSecondary }]}>
+                  Course Title
                 </ThemedText>
-                <View style={styles.categoryRow}>
-                  {(["major", "ge", "elective"] as const).map((cat) => (
+                <TextInput
+                  style={[
+                    styles.addInput,
+                    {
+                      backgroundColor: theme.backgroundSecondary,
+                      color: theme.text,
+                      borderColor: theme.border,
+                    },
+                  ]}
+                  placeholder="e.g., Calculus I"
+                  placeholderTextColor={theme.textSecondary}
+                  value={newCourse.title}
+                  onChangeText={(text) =>
+                    setNewCourse({ ...newCourse, title: text })
+                  }
+                />
+              </View>
+
+              <View style={styles.rowInputs}>
+                <View style={[styles.addInputGroup, { flex: 1 }]}>
+                  <ThemedText style={[styles.addLabel, { color: theme.textSecondary }]}>
+                    Units
+                  </ThemedText>
+                  <TextInput
+                    style={[
+                      styles.addInput,
+                      {
+                        backgroundColor: theme.backgroundSecondary,
+                        color: theme.text,
+                        borderColor: theme.border,
+                      },
+                    ]}
+                    placeholder="3"
+                    placeholderTextColor={theme.textSecondary}
+                    value={newCourse.units}
+                    onChangeText={(text) =>
+                      setNewCourse({ ...newCourse, units: text })
+                    }
+                    keyboardType="number-pad"
+                  />
+                </View>
+
+                <View style={[styles.addInputGroup, { flex: 2 }]}>
+                  <ThemedText style={[styles.addLabel, { color: theme.textSecondary }]}>
+                    Category
+                  </ThemedText>
+                  <View style={styles.addChipRow}>
+                    {(["major", "ge", "elective"] as const).map((cat) => (
+                      <Pressable
+                        key={cat}
+                        onPress={() =>
+                          setNewCourse({ ...newCourse, category: cat })
+                        }
+                        style={[
+                          styles.addChip,
+                          {
+                            backgroundColor:
+                              newCourse.category === cat
+                                ? theme.primary
+                                : theme.backgroundSecondary,
+                          },
+                        ]}
+                      >
+                        <ThemedText
+                          style={[styles.addChipText, {
+                            color:
+                              newCourse.category === cat
+                                ? "#FFFFFF"
+                                : theme.text,
+                          }]}
+                        >
+                          {cat === "ge" ? "GE" : cat.charAt(0).toUpperCase() + cat.slice(1)}
+                        </ThemedText>
+                      </Pressable>
+                    ))}
+                  </View>
+                </View>
+              </View>
+
+              <View style={styles.addInputGroup}>
+                <ThemedText style={[styles.addLabel, { color: theme.textSecondary }]}>
+                  Status
+                </ThemedText>
+                <View style={styles.addChipRow}>
+                  {(["planned", "in_progress", "taken"] as const).map((status) => (
                     <Pressable
-                      key={cat}
+                      key={status}
                       onPress={() =>
-                        setNewCourse({ ...newCourse, category: cat })
+                        setNewCourse({ ...newCourse, status, grade: status !== "taken" ? undefined : newCourse.grade })
                       }
                       style={[
-                        styles.categoryButton,
+                        styles.addChip,
                         {
                           backgroundColor:
-                            newCourse.category === cat
-                              ? theme.primary
+                            newCourse.status === status
+                              ? status === "taken" ? theme.success : status === "in_progress" ? theme.primary : theme.secondary
                               : theme.backgroundSecondary,
                         },
                       ]}
                     >
                       <ThemedText
-                        type="small"
-                        style={{
+                        style={[styles.addChipText, {
                           color:
-                            newCourse.category === cat
+                            newCourse.status === status
                               ? "#FFFFFF"
                               : theme.text,
-                          fontWeight: "600",
-                        }}
+                        }]}
                       >
-                        {cat === "ge" ? "GE" : cat.charAt(0).toUpperCase() + cat.slice(1)}
+                        {status === "planned" ? "Planned" : status === "in_progress" ? "In Progress" : "Taken"}
                       </ThemedText>
                     </Pressable>
                   ))}
                 </View>
               </View>
-            </View>
 
-            <View style={styles.inputGroup}>
-              <ThemedText type="small" style={styles.label}>
-                Status
-              </ThemedText>
-              <View style={styles.categoryRow}>
-                {(["planned", "in_progress", "taken"] as const).map((status) => (
-                  <Pressable
-                    key={status}
-                    onPress={() =>
-                      setNewCourse({ ...newCourse, status, grade: status !== "taken" ? undefined : newCourse.grade })
-                    }
-                    style={[
-                      styles.categoryButton,
-                      {
-                        backgroundColor:
-                          newCourse.status === status
-                            ? status === "taken" ? theme.success : status === "in_progress" ? theme.primary : theme.secondary
-                            : theme.backgroundSecondary,
-                      },
-                    ]}
+              {newCourse.status === "taken" ? (
+                <View style={styles.addInputGroup}>
+                  <ThemedText style={[styles.addLabel, { color: theme.textSecondary }]}>
+                    Grade
+                  </ThemedText>
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.addGradeRow}
                   >
-                    <ThemedText
-                      type="small"
-                      style={{
-                        color:
-                          newCourse.status === status
-                            ? "#FFFFFF"
-                            : theme.text,
-                        fontWeight: "600",
-                      }}
-                    >
-                      {status === "planned" ? "Planned" : status === "in_progress" ? "In Progress" : "Taken"}
-                    </ThemedText>
-                  </Pressable>
-                ))}
-              </View>
-            </View>
-
-            {newCourse.status === "taken" ? (
-              <View style={styles.inputGroup}>
-                <ThemedText type="small" style={styles.label}>
-                  Grade
-                </ThemedText>
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={styles.gradeRow}
-                >
-                  {GRADES.map((grade) => (
-                    <Pressable
-                      key={grade}
-                      onPress={() => setNewCourse({ ...newCourse, grade })}
-                      style={[
-                        styles.gradeButton,
-                        {
-                          backgroundColor:
-                            newCourse.grade === grade
-                              ? theme.success
-                              : theme.backgroundSecondary,
-                          borderColor:
-                            newCourse.grade === grade
-                              ? theme.success
-                              : theme.border,
-                        },
-                      ]}
-                    >
-                      <ThemedText
-                        type="small"
-                        style={{
-                          color: newCourse.grade === grade ? "#FFFFFF" : theme.text,
-                          fontWeight: "600",
-                        }}
+                    {GRADES.map((grade) => (
+                      <Pressable
+                        key={grade}
+                        onPress={() => setNewCourse({ ...newCourse, grade })}
+                        style={[
+                          styles.addGradeChip,
+                          {
+                            backgroundColor:
+                              newCourse.grade === grade
+                                ? theme.success
+                                : theme.backgroundSecondary,
+                            borderColor:
+                              newCourse.grade === grade
+                                ? theme.success
+                                : theme.border,
+                          },
+                        ]}
                       >
-                        {grade}
-                      </ThemedText>
-                    </Pressable>
-                  ))}
-                </ScrollView>
-              </View>
-            ) : null}
+                        <ThemedText
+                          style={[styles.addChipText, {
+                            color: newCourse.grade === grade ? "#FFFFFF" : theme.text,
+                          }]}
+                        >
+                          {grade}
+                        </ThemedText>
+                      </Pressable>
+                    ))}
+                  </ScrollView>
+                </View>
+              ) : null}
 
-            <Button onPress={addCourse} style={{ marginTop: Spacing.lg }}>
-              Add Course
-            </Button>
+              <Button onPress={addCourse} style={styles.addButton}>
+                Add Course
+              </Button>
+            </ScrollView>
           </ThemedView>
         </KeyboardAvoidingView>
       </Modal>
@@ -996,8 +996,9 @@ const styles = StyleSheet.create({
   modalContent: {
     borderTopLeftRadius: BorderRadius["2xl"],
     borderTopRightRadius: BorderRadius["2xl"],
-    padding: Spacing.xl,
-    paddingBottom: Spacing["4xl"],
+    padding: Spacing.lg,
+    paddingBottom: Spacing.xl,
+    maxHeight: "90%",
   },
   modalHeader: {
     flexDirection: "row",
@@ -1024,7 +1025,7 @@ const styles = StyleSheet.create({
   },
   rowInputs: {
     flexDirection: "row",
-    gap: Spacing.md,
+    gap: Spacing.sm,
   },
   categoryRow: {
     flexDirection: "row",
@@ -1049,6 +1050,69 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     borderRadius: BorderRadius.sm,
     borderWidth: 1,
+  },
+  addModalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingBottom: Spacing.sm,
+    marginBottom: 2,
+  },
+  addModalTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+  },
+  addModalScroll: {
+    paddingBottom: Spacing.sm,
+  },
+  addModalSubtitle: {
+    fontSize: 12,
+    marginBottom: Spacing.sm,
+  },
+  addInputGroup: {
+    marginBottom: Spacing.sm,
+  },
+  addLabel: {
+    fontSize: 12,
+    fontWeight: "500",
+    marginBottom: 2,
+  },
+  addInput: {
+    height: 38,
+    borderRadius: BorderRadius.xs,
+    paddingHorizontal: Spacing.sm,
+    fontSize: 14,
+    borderWidth: 1,
+  },
+  addChipRow: {
+    flexDirection: "row",
+    gap: 4,
+  },
+  addChip: {
+    flex: 1,
+    height: 34,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: BorderRadius.xs,
+  },
+  addChipText: {
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  addGradeRow: {
+    flexDirection: "row",
+    gap: 4,
+  },
+  addGradeChip: {
+    paddingHorizontal: Spacing.sm,
+    height: 32,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: BorderRadius.xs,
+    borderWidth: 1,
+  },
+  addButton: {
+    marginTop: Spacing.sm,
   },
   courseDetails: {
     marginBottom: Spacing.xl,
