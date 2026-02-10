@@ -9,6 +9,8 @@ import {
   Platform,
   ActivityIndicator,
   Alert,
+  Modal,
+  ScrollView,
 } from "react-native";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -30,6 +32,8 @@ import {
   getCachedInstitutions,
   getRoadmapDataForAdvisor,
   getAllSelectedMajors,
+  getAIAdvisorConsent,
+  saveAIAdvisorConsent,
   type ChatMessage,
   type UserProfile,
   type Institution,
@@ -73,13 +77,40 @@ export default function AdvisorScreen() {
   const tabBarHeight = useBottomTabBarHeight();
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
-  const { theme } = useTheme();
+  const { theme, isDark } = useTheme();
   const flatListRef = useRef<FlatList>(null);
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputText, setInputText] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [userContext, setUserContext] = useState<UserContext | null>(null);
+  const [consentStatus, setConsentStatus] = useState<boolean | null | "loading">("loading");
+  const [showConsentModal, setShowConsentModal] = useState(false);
+
+  useEffect(() => {
+    const checkConsent = async () => {
+      const consent = await getAIAdvisorConsent();
+      setConsentStatus(consent);
+      if (consent === null) {
+        setShowConsentModal(true);
+      }
+    };
+    checkConsent();
+  }, []);
+
+  const handleAcceptConsent = async () => {
+    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    await saveAIAdvisorConsent(true);
+    setConsentStatus(true);
+    setShowConsentModal(false);
+  };
+
+  const handleDeclineConsent = async () => {
+    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+    await saveAIAdvisorConsent(false);
+    setConsentStatus(false);
+    setShowConsentModal(false);
+  };
 
   const loadUserContext = useCallback(async (): Promise<UserContext | null> => {
     const profile = await getUserProfile();
@@ -125,8 +156,10 @@ export default function AdvisorScreen() {
   }, [loadUserContext]);
 
   useEffect(() => {
-    loadHistory();
-  }, [loadHistory]);
+    if (consentStatus === true) {
+      loadHistory();
+    }
+  }, [consentStatus, loadHistory]);
 
   const handleClearChat = useCallback(async () => {
     const context = await loadUserContext();
@@ -151,18 +184,24 @@ export default function AdvisorScreen() {
   }, [loadUserContext]);
 
   useEffect(() => {
-    navigation.setOptions({
-      headerRight: () => (
-        <Pressable
-          onPress={handleClearChat}
-          hitSlop={16}
-          style={styles.headerButton}
-        >
-          <Feather name="trash-2" size={20} color={theme.textSecondary} />
-        </Pressable>
-      ),
-    });
-  }, [navigation, theme, handleClearChat]);
+    if (consentStatus === true) {
+      navigation.setOptions({
+        headerRight: () => (
+          <Pressable
+            onPress={handleClearChat}
+            hitSlop={16}
+            style={styles.headerButton}
+          >
+            <Feather name="trash-2" size={20} color={theme.textSecondary} />
+          </Pressable>
+        ),
+      });
+    } else {
+      navigation.setOptions({
+        headerRight: () => null,
+      });
+    }
+  }, [navigation, theme, handleClearChat, consentStatus]);
 
   const scrollToBottom = () => {
     setTimeout(() => {
@@ -368,6 +407,128 @@ export default function AdvisorScreen() {
     );
   };
 
+  const renderConsentModal = () => (
+    <Modal
+      visible={showConsentModal}
+      animationType="fade"
+      transparent
+      onRequestClose={handleDeclineConsent}
+    >
+      <View style={styles.modalOverlay}>
+        <View style={[styles.modalContent, { backgroundColor: theme.backgroundDefault }]}>
+          <View style={[styles.modalIconContainer, { backgroundColor: `${theme.primary}15` }]}>
+            <Feather name="cpu" size={28} color={theme.primary} />
+          </View>
+
+          <ThemedText type="h3" style={styles.modalTitle}>
+            AI Advisor Uses OpenAI
+          </ThemedText>
+
+          <ScrollView style={styles.modalScroll} showsVerticalScrollIndicator={false}>
+            <ThemedText type="body" style={[styles.modalText, { color: theme.textSecondary }]}>
+              To provide helpful transfer advice, your messages and course information will be sent to OpenAI's servers for processing.
+            </ThemedText>
+
+            <ThemedText type="body" style={[styles.modalSubheading, { color: theme.text }]}>
+              Data shared includes:
+            </ThemedText>
+
+            <View style={styles.dataList}>
+              <View style={styles.dataItem}>
+                <Feather name="message-circle" size={16} color={theme.primary} />
+                <ThemedText type="body" style={[styles.dataItemText, { color: theme.textSecondary }]}>
+                  Your questions and messages
+                </ThemedText>
+              </View>
+              <View style={styles.dataItem}>
+                <Feather name="book" size={16} color={theme.primary} />
+                <ThemedText type="body" style={[styles.dataItemText, { color: theme.textSecondary }]}>
+                  Your selected schools and major
+                </ThemedText>
+              </View>
+              <View style={styles.dataItem}>
+                <Feather name="list" size={16} color={theme.primary} />
+                <ThemedText type="body" style={[styles.dataItemText, { color: theme.textSecondary }]}>
+                  Your completed courses (when relevant)
+                </ThemedText>
+              </View>
+            </View>
+
+            <ThemedText type="small" style={[styles.modalDisclaimer, { color: theme.textSecondary }]}>
+              OpenAI processes this data according to their privacy policy. Messages are not used to train AI models and are retained temporarily for abuse monitoring.
+            </ThemedText>
+
+            <ThemedText type="small" style={[styles.modalDisclaimer, { color: theme.textSecondary }]}>
+              You can use TransferUp without the AI Advisor.
+            </ThemedText>
+          </ScrollView>
+
+          <View style={styles.modalButtons}>
+            <Pressable
+              onPress={handleAcceptConsent}
+              style={[styles.acceptButton, { backgroundColor: theme.primary }]}
+              testID="button-accept-consent"
+            >
+              <ThemedText type="body" style={{ color: "#FFFFFF", fontFamily: "Nunito_700Bold" }}>
+                Accept & Continue
+              </ThemedText>
+            </Pressable>
+
+            <Pressable
+              onPress={handleDeclineConsent}
+              style={[styles.declineButton, { backgroundColor: theme.backgroundTertiary }]}
+              testID="button-decline-consent"
+            >
+              <ThemedText type="body" style={{ color: theme.textSecondary }}>
+                Decline
+              </ThemedText>
+            </Pressable>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+
+  if (consentStatus === "loading") {
+    return (
+      <View style={[styles.container, styles.centeredContent, { backgroundColor: theme.backgroundRoot }]}>
+        <ActivityIndicator size="large" color={theme.primary} />
+      </View>
+    );
+  }
+
+  if (consentStatus === false) {
+    return (
+      <View style={[styles.container, { backgroundColor: theme.backgroundRoot }]}>
+        <View style={[styles.centeredContent, { paddingHorizontal: Spacing.xl }]}>
+          <View style={[styles.disabledIcon, { backgroundColor: `${theme.textSecondary}15` }]}>
+            <Feather name="cpu" size={40} color={theme.textSecondary} />
+          </View>
+          <ThemedText type="h3" style={styles.disabledTitle}>
+            AI Advisor is Disabled
+          </ThemedText>
+          <ThemedText
+            type="body"
+            style={[styles.disabledText, { color: theme.textSecondary }]}
+          >
+            Enable it in Settings to get personalized transfer advice.
+          </ThemedText>
+          <Pressable
+            onPress={() => (navigation as any).navigate("ProfileTab")}
+            style={[styles.settingsLink, { backgroundColor: `${theme.primary}15` }]}
+            testID="button-go-to-settings"
+          >
+            <Feather name="settings" size={18} color={theme.primary} />
+            <ThemedText type="body" style={{ color: theme.primary, marginLeft: Spacing.sm }}>
+              Go to Settings
+            </ThemedText>
+          </Pressable>
+        </View>
+        {renderConsentModal()}
+      </View>
+    );
+  }
+
   return (
     <KeyboardAvoidingView
       style={[styles.container, { backgroundColor: theme.backgroundRoot }]}
@@ -440,6 +601,8 @@ export default function AdvisorScreen() {
           </Pressable>
         </View>
       </View>
+
+      {renderConsentModal()}
     </KeyboardAvoidingView>
   );
 }
@@ -447,6 +610,11 @@ export default function AdvisorScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  centeredContent: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
   },
   messagesList: {
     paddingHorizontal: Spacing.lg,
@@ -522,5 +690,97 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.sm,
     paddingVertical: Spacing.xs,
     marginRight: Spacing.xs,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.6)",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: Spacing.lg,
+  },
+  modalContent: {
+    width: "100%",
+    maxWidth: 400,
+    borderRadius: BorderRadius["2xl"],
+    padding: Spacing.xl,
+    maxHeight: "80%",
+  },
+  modalIconContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: BorderRadius.full,
+    alignItems: "center",
+    justifyContent: "center",
+    alignSelf: "center",
+    marginBottom: Spacing.lg,
+  },
+  modalTitle: {
+    textAlign: "center",
+    marginBottom: Spacing.lg,
+  },
+  modalScroll: {
+    maxHeight: 300,
+  },
+  modalText: {
+    lineHeight: 22,
+    marginBottom: Spacing.lg,
+  },
+  modalSubheading: {
+    fontFamily: "Nunito_700Bold",
+    marginBottom: Spacing.sm,
+  },
+  dataList: {
+    gap: Spacing.sm,
+    marginBottom: Spacing.lg,
+  },
+  dataItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+  },
+  dataItemText: {
+    flex: 1,
+  },
+  modalDisclaimer: {
+    lineHeight: 18,
+    marginBottom: Spacing.sm,
+  },
+  modalButtons: {
+    gap: Spacing.sm,
+    marginTop: Spacing.lg,
+  },
+  acceptButton: {
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.md,
+    alignItems: "center",
+  },
+  declineButton: {
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.md,
+    alignItems: "center",
+  },
+  disabledIcon: {
+    width: 80,
+    height: 80,
+    borderRadius: BorderRadius.full,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: Spacing.xl,
+  },
+  disabledTitle: {
+    textAlign: "center",
+    marginBottom: Spacing.sm,
+  },
+  disabledText: {
+    textAlign: "center",
+    lineHeight: 22,
+    marginBottom: Spacing.xl,
+  },
+  settingsLink: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.xl,
+    borderRadius: BorderRadius.md,
   },
 });

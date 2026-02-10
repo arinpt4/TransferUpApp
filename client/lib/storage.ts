@@ -14,6 +14,7 @@ const STORAGE_KEYS = {
   CHAT_HISTORY: "chatHistory",
   THEME: "theme",
   SELECTED_MAJORS: "selected_majors",
+  AI_ADVISOR_CONSENT: "ai_advisor_consent",
 } as const;
 
 export type RoadmapMode = "semester" | "quarter";
@@ -436,6 +437,20 @@ export async function getRoadmapDataForAdvisor(): Promise<RoadmapData> {
     plannedUnits,
     calculatedGPA: gpa,
   };
+}
+
+export async function getAIAdvisorConsent(): Promise<boolean | null> {
+  try {
+    const value = await AsyncStorage.getItem(STORAGE_KEYS.AI_ADVISOR_CONSENT);
+    if (value === null) return null;
+    return value === "true";
+  } catch {
+    return null;
+  }
+}
+
+export async function saveAIAdvisorConsent(consent: boolean): Promise<void> {
+  await AsyncStorage.setItem(STORAGE_KEYS.AI_ADVISOR_CONSENT, consent.toString());
 }
 
 export async function getAllSelectedMajors(): Promise<SelectedMajor[]> {
