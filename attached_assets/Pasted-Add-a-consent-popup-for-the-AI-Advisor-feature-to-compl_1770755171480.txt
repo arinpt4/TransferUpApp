@@ -1,0 +1,55 @@
+Add a consent popup for the AI Advisor feature to comply with Apple's privacy requirements.
+
+REQUIREMENTS:
+
+1. FIRST TIME USER OPENS AI ADVISOR:
+   Show a modal/alert with this information:
+   
+   Title: "AI Advisor Uses OpenAI"
+   
+   Message:
+   "To provide helpful transfer advice, your messages and course information will be sent to OpenAI's servers for processing.
+   
+   Data shared includes:
+   • Your questions and messages
+   • Your selected schools and major
+   • Your completed courses (when relevant)
+   
+   OpenAI processes this data according to their privacy policy. Messages are not used to train AI models and are retained temporarily for abuse monitoring.
+   
+   You can use TransferUp without the AI Advisor."
+   
+   Buttons:
+   • "Accept & Continue" (primary, blue button)
+   • "Decline" (secondary, gray button)
+
+2. SAVE USER'S CHOICE:
+   - Store in AsyncStorage: key 'aiAdvisorConsent' with value true/false
+   - If user accepts: allow access to AI Advisor
+   - If user declines: show message "AI Advisor is disabled. Enable it in Settings."
+
+3. ADD TOGGLE IN SETTINGS:
+   - New setting: "AI Advisor" with toggle switch
+   - If disabled: user cannot access AI Advisor
+   - If user tries to enable: show the consent popup again
+   - Include small text: "Sends messages to OpenAI for processing"
+
+4. CHECK CONSENT BEFORE SHOWING ADVISOR:
+   - When user taps "Ask Advisor" from Home or tab:
+     * Check if 'aiAdvisorConsent' exists in AsyncStorage
+     * If yes and true: open Advisor normally
+     * If no or false: show consent popup
+   - Don't let user send messages without accepting
+
+5. UPDATE ADVISOR SCREEN:
+   - If consent is declined, show placeholder:
+     "AI Advisor is disabled. Enable it in Settings to get personalized transfer advice."
+   - Add link to Settings
+
+6. VISUAL DESIGN:
+   - Modal should match app design (dark theme, blue accents)
+   - Clear, readable text
+   - Easy to understand what data is shared
+   - Obvious accept/decline buttons
+
+This ensures users give explicit permission before any data is sent to OpenAI, as required by Apple.
