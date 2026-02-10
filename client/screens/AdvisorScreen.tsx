@@ -87,16 +87,22 @@ export default function AdvisorScreen() {
   const [consentStatus, setConsentStatus] = useState<boolean | null | "loading">("loading");
   const [showConsentModal, setShowConsentModal] = useState(false);
 
-  useEffect(() => {
-    const checkConsent = async () => {
-      const consent = await getAIAdvisorConsent();
-      setConsentStatus(consent);
-      if (consent === null) {
-        setShowConsentModal(true);
-      }
-    };
-    checkConsent();
+  const checkConsent = useCallback(async () => {
+    const consent = await getAIAdvisorConsent();
+    setConsentStatus(consent);
+    if (consent === null) {
+      setShowConsentModal(true);
+    }
   }, []);
+
+  useEffect(() => {
+    checkConsent();
+  }, [checkConsent]);
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener("focus", checkConsent);
+    return unsubscribe;
+  }, [navigation, checkConsent]);
 
   const handleAcceptConsent = async () => {
     await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
