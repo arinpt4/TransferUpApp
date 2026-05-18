@@ -3,6 +3,88 @@ import { createServer, type Server } from "node:http";
 import OpenAI from "openai";
 
 const ASSIST_API_BASE = "https://assist.org/api";
+const ASSIST_BASE_URL = "https://assist.org";
+
+interface AssistSession {
+  cookieString: string;
+  xsrfToken: string;
+  fetchedAt: number;
+}
+
+let assistSession: AssistSession | null = null;
+const SESSION_TTL_MS = 30 * 60 * 1000; // 30 minutes
+
+async function getAssistSession(): Promise<AssistSession> {
+  const now = Date.now();
+  if (assistSession && now - assistSession.fetchedAt < SESSION_TTL_MS) {
+    return assistSession;
+  }
+
+  const response = await fetch(ASSIST_BASE_URL, {
+    headers: {
+      "User-Agent":
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+      Accept: "text/html,application/xhtml+xml",
+    },
+  });
+
+  const setCookies = response.headers.getSetCookie
+    ? response.headers.getSetCookie()
+    : [];
+
+  const cookieMap: Record<string, string> = {};
+  setCookies.forEach((c) => {
+    const [kv] = c.split(";");
+    const eqIdx = kv.indexOf("=");
+    if (eqIdx !== -1) {
+      const k = kv.substring(0, eqIdx).trim();
+      const v = kv.substring(eqIdx + 1).trim();
+      cookieMap[k] = v;
+    }
+  });
+
+  const cookieString = Object.entries(cookieMap)
+    .map(([k, v]) => `${k}=${v}`)
+    .join("; ");
+  const xsrfToken = cookieMap["X-XSRF-TOKEN"] || cookieMap["XSRF-TOKEN"] || "";
+
+  assistSession = { cookieString, xsrfToken, fetchedAt: now };
+  return assistSession;
+}
+
+async function assistFetch(url: string): Promise<Response> {
+  const session = await getAssistSession();
+  const response = await fetch(url, {
+    headers: {
+      "User-Agent":
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+      Accept: "application/json, text/plain, */*",
+      "Accept-Language": "en-US,en;q=0.9",
+      Referer: "https://assist.org/",
+      Cookie: session.cookieString,
+      "X-XSRF-TOKEN": session.xsrfToken,
+    },
+  });
+
+  // If we get 400/401/403, clear session cache and retry once with a fresh session
+  if (response.status === 400 || response.status === 401 || response.status === 403) {
+    assistSession = null;
+    const freshSession = await getAssistSession();
+    return fetch(url, {
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+        Accept: "application/json, text/plain, */*",
+        "Accept-Language": "en-US,en;q=0.9",
+        Referer: "https://assist.org/",
+        Cookie: freshSession.cookieString,
+        "X-XSRF-TOKEN": freshSession.xsrfToken,
+      },
+    });
+  }
+
+  return response;
+}
 
 // OpenAI client initialized lazily to allow app startup without API key
 function getOpenAIClient(): OpenAI {
@@ -229,7 +311,7 @@ let cachedInstitutions: any[] = [];
 async function fetchAllInstitutions(): Promise<any[]> {
   if (cachedInstitutions.length > 0) return cachedInstitutions;
   
-  const response = await fetch(`${ASSIST_API_BASE}/institutions`);
+  const response = await assistFetch(`${ASSIST_API_BASE}/institutions`);
   const data = await response.json();
   
   cachedInstitutions = data
@@ -353,7 +435,7 @@ async function executeFunction(name: string, args: any): Promise<string> {
       case "get_agreements": {
         const { sendingInstitutionId, receivingInstitutionId } = args;
         const url = `${ASSIST_API_BASE}/agreements?receivingInstitutionId=${receivingInstitutionId}&sendingInstitutionId=${sendingInstitutionId}&academicYearId=74&categoryCode=major`;
-        const response = await fetch(url);
+        const response = await assistFetch(url);
         const data = await response.json();
         
         const agreements = data.reports?.map((r: any) => ({
@@ -378,7 +460,7 @@ async function executeFunction(name: string, args: any): Promise<string> {
       case "search_majors": {
         const { sendingInstitutionId, receivingInstitutionId, majorQuery } = args;
         const url = `${ASSIST_API_BASE}/agreements?receivingInstitutionId=${receivingInstitutionId}&sendingInstitutionId=${sendingInstitutionId}&academicYearId=74&categoryCode=major`;
-        const response = await fetch(url);
+        const response = await assistFetch(url);
         const data = await response.json();
         
         const agreements = data.reports?.map((r: any) => ({
@@ -425,7 +507,7 @@ async function executeFunction(name: string, args: any): Promise<string> {
       
       case "get_articulation": {
         const { key } = args;
-        const response = await fetch(`${ASSIST_API_BASE}/articulation/Agreements?Key=${encodeURIComponent(key)}`);
+        const response = await assistFetch(`${ASSIST_API_BASE}/articulation/Agreements?Key=${encodeURIComponent(key)}`);
         const data = await response.json();
         const courses = parseArticulationDataForChat(data);
         
@@ -691,7 +773,7 @@ interface AssistInstitution {
 export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/institutions", async (req, res) => {
     try {
-      const response = await fetch(`${ASSIST_API_BASE}/institutions`);
+      const response = await assistFetch(`${ASSIST_API_BASE}/institutions`);
       
       if (!response.ok) {
         throw new Error(`ASSIST API error: ${response.status}`);
@@ -749,7 +831,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const yearParam = academicYearId || "74";
       const url = `${ASSIST_API_BASE}/agreements?receivingInstitutionId=${receivingInstitutionId}&sendingInstitutionId=${sendingInstitutionId}&academicYearId=${yearParam}&categoryCode=major`;
 
-      const response = await fetch(url);
+      const response = await assistFetch(url);
 
       if (!response.ok) {
         throw new Error(`ASSIST API error: ${response.status}`);
@@ -771,7 +853,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "key parameter is required" });
       }
 
-      const response = await fetch(
+      const response = await assistFetch(
         `${ASSIST_API_BASE}/articulation/Agreements?Key=${encodeURIComponent(key as string)}`
       );
 
