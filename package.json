@@ -16,7 +16,11 @@
     "check:format": "prettier --check \"**/*.{js,ts,tsx,css,json}\"",
     "format": "prettier --write \"**/*.{js,ts,tsx,css,json}\"",
     "build:increment": "node scripts/increment-build.js",
-    "build:increment:dry": "node scripts/increment-build.js --dry-run"
+    "build:increment:dry": "node scripts/increment-build.js --dry-run",
+    "eas:build:production": "npx eas build --profile production --platform all",
+    "eas:build:ios": "npx eas build --profile production --platform ios",
+    "eas:build:android": "npx eas build --profile production --platform android",
+    "eas:submit:production": "npx eas submit --profile production --platform all"
   },
   "dependencies": {
     "@expo-google-fonts/nunito": "^0.4.2",
