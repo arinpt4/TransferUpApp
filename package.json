@@ -14,7 +14,9 @@
     "lint:fix": "npx expo lint --fix",
     "check:types": "tsc --noEmit",
     "check:format": "prettier --check \"**/*.{js,ts,tsx,css,json}\"",
-    "format": "prettier --write \"**/*.{js,ts,tsx,css,json}\""
+    "format": "prettier --write \"**/*.{js,ts,tsx,css,json}\"",
+    "build:increment": "node scripts/increment-build.js",
+    "build:increment:dry": "node scripts/increment-build.js --dry-run"
   },
   "dependencies": {
     "@expo-google-fonts/nunito": "^0.4.2",
