@@ -313,7 +313,7 @@ export default function ProfileScreen() {
           type="small"
           style={[styles.footerText, { color: theme.textSecondary }]}
         >
-          TransferUp v1.0.0
+          TransferUp v1.0.1
         </ThemedText>
       </Animated.View>
 

@@ -2,7 +2,7 @@
   "expo": {
     "name": "TransferUp",
     "slug": "transferup",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "transferup",
@@ -11,7 +11,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.transferup.app",
-      "buildNumber": "2"
+      "buildNumber": "1"
     },
     "android": {
       "adaptiveIcon": {
@@ -23,7 +23,7 @@
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "package": "com.transferup.app",
-      "versionCode": 2
+      "versionCode": 3
     },
     "web": {
       "output": "single",

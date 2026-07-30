@@ -84,6 +84,15 @@ Profiles are defined in `eas.json`:
 
 The `production` profile has `autoIncrement: true`, so build numbers are managed automatically by EAS — no manual bumping needed.
 
+## App Store Versioning Rule
+
+Apple rejects any submission whose marketing version (`expo.version` in `app.json`, aka `CFBundleShortVersionString`) is not **strictly higher** than the last approved version. Before each new App Store submission:
+
+1. Bump `expo.version` in `app.json` (e.g. `1.0.0` → `1.0.1`).
+2. Reset `ios.buildNumber` to `"1"` for the new version (or let EAS manage it via `autoIncrement`).
+3. Increment `android.versionCode` — it must always increase across every Play Store upload, regardless of the marketing version.
+4. Update any user-facing version strings (e.g. the version shown in the Profile screen).
+
 ## Store Credentials
 
 EAS manages signing credentials for you:
